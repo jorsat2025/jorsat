@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mapa de Alertas - SuriWeb</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Clustering -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #1e1e1e;
+      color: white;
+      font-family: Arial;
+    }
+
+    #controls {
+      background-color: #2c2c2c;
+      padding: 10px;
+      text-align: center;
+    }
+
+    select, button {
+      margin: 5px;
+      padding: 6px 10px;
+      background-color: #333;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    select:hover, button:hover {
+      background-color: #444;
+    }
+
+    #map {
+      height: calc(100% - 110px);
+      width: 100%;
+    }
+
+    #leyenda {
+      background-color: rgba(50, 50, 50, 0.85);
+      padding: 10px;
+      font-size: 14px;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      color: white;
+      border-radius: 6px;
+    }
+
+    .leaflet-popup-content {
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <label for="firmaSelect">Firma:</label>
+    <select id="firmaSelect"><option value="">Todas</option></select>
+
+    <label for="paisSelect">País:</label>
+    <select id="paisSelect"><option value="">Todos</option></select>
+
+    <label for="sevSelect">Severidad:</label>
+    <select id="sevSelect">
+      <option value="">Todas</option>
+      <option value="1">1 - Crítica (Rojo)</option>
+      <option value="2">2 - Media (Naranja)</option>
+      <option value="3">3 - Baja (Amarillo)</option>
+      <option value="4">4+ - Informativa (Azul)</option>
+    </select>
+
+    <button onclick="updateMap()">Centrar mapa</button>
+    <button onclick="resetFiltros()">Resetear filtros</button>
+    <button onclick="exportarCSV()">Exportar CSV</button>
+  </div>
+
+  <div id="map"></div>
+  <div id="leyenda">
+    <b>Leyenda de Severidad</b><br>
+    <span style="color: red;">●</span> Crítica (1)<br>
+    <span style="color: orange;">●</span> Media (2)<br>
+    <span style="color: yellow;">●</span> Baja (3)<br>
+    <span style="color: lightblue;">●</span> Informativa (4+)
+  </div>
+
+  <script>
+    const map = L.map('map').setView([0, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 18
+    }).addTo(map);
+
+    const markerCluster = L.markerClusterGroup();
+    map.addLayer(markerCluster);
+
+    let allData = [];
+
+    const firmaSelect = document.getElementById('firmaSelect');
+    const paisSelect = document.getElementById('paisSelect');
+    const sevSelect = document.getElementById('sevSelect');
+
+    function colorPorSeveridad(sev) {
+      const s = parseInt(sev);
+      if (s === 1) return "red";
+      if (s === 2) return "orange";
+      if (s === 3) return "yellow";
+      return "lightblue";
+    }
+
+    function updateMap() {
+      markerCluster.clearLayers();
+
+      const firmaFiltro = firmaSelect.value;
+      const paisFiltro = paisSelect.value;
+      const sevFiltro = sevSelect.value;
+
+      const filtrado = allData.filter(event =>
+        (!firmaFiltro || event.signature === firmaFiltro) &&
+        (!paisFiltro || event.country === paisFiltro) &&
+        (!sevFiltro || String(event.severity) === sevFiltro)
+      );
+
+      filtrado.forEach(event => {
+        const color = colorPorSeveridad(event.severity);
+        const icon = L.divIcon({
+          className: '',
+          html: `<div style="background:${color};width:12px;height:12px;border-radius:50%;border:2px solid white;"></div>`
+        });
+
+        const marker = L.marker([event.latitude, event.longitude], { icon });
+        marker.bindPopup(`
+          <b>Atacante:</b> ${event.ip}<br>
+          <b>Víctima:</b> ${event.dest_ip}<br>
+          <b>Firma:</b> ${event.signature}<br>
+          <b>Severidad:</b> ${event.severity || 'N/A'}<br>
+          <b>Ubicación:</b> ${event.city || 'Desconocido'}, ${event.country || ''}
+        `);
+        markerCluster.addLayer(marker);
+      });
+
+      if (filtrado.length > 0) {
+        const group = new L.featureGroup(markerCluster.getLayers());
+        map.fitBounds(group.getBounds().pad(0.05));
+      }
+    }
+
+    function resetFiltros() {
+      firmaSelect.value = "";
+      paisSelect.value = "";
+      sevSelect.value = "";
+      updateMap();
+    }
+
+    function cargarDatos() {
+      fetch('/geo-alerts')
+        .then(res => res.json())
+        .then(data => {
+          allData = data;
+
+          if (firmaSelect.options.length === 1) {
+            const firmasUnicas = [...new Set(data.map(e => e.signature))].sort();
+            const paisesUnicas = [...new Set(data.map(e => e.country))].sort();
+
+            firmasUnicas.forEach(firma => {
+              const opt = document.createElement('option');
+              opt.value = firma;
+              opt.text = firma;
+              firmaSelect.appendChild(opt);
+            });
+
+            paisesUnicas.forEach(pais => {
+              const opt = document.createElement('option');
+              opt.value = pais;
+              opt.text = pais;
+              paisSelect.appendChild(opt);
+            });
+          }
+
+          updateMap();
+        })
+        .catch(err => {
+          console.error("Error al actualizar geo-alerts:", err);
+        });
+    }
+
+    function exportarCSV() {
+      const firmaFiltro = firmaSelect.value;
+      const paisFiltro = paisSelect.value;
+      const sevFiltro = sevSelect.value;
+
+      const filtrado = allData.filter(event =>
+        (!firmaFiltro || event.signature === firmaFiltro) &&
+        (!paisFiltro || event.country === paisFiltro) &&
+        (!sevFiltro || String(event.severity) === sevFiltro)
+      );
+
+      if (filtrado.length === 0) {
+        alert("No hay datos para exportar.");
+        return;
+      }
+
+      const headers = ["ip", "dest_ip", "signature", "severity", "country", "city", "latitude", "longitude"];
+      const rows = [headers.join(",")];
+
+      filtrado.forEach(e => {
+        const fila = [
+          e.ip, e.dest_ip, e.signature, e.severity, e.country, e.city,
+          e.latitude, e.longitude
+        ].map(v => `"${(v || '').toString().replace(/"/g, '""')}"`);
+
+        rows.push(fila.join(","));
+      });
+
+      const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "geo_alerts_export.csv";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    cargarDatos();
+    setInterval(cargarDatos, 60000);
+
+    firmaSelect.addEventListener('change', updateMap);
+    paisSelect.addEventListener('change', updateMap);
+    sevSelect.addEventListener('change', updateMap);
+  </script>
+</body>
+</html>

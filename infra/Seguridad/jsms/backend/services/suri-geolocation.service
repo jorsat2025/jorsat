@@ -1,0 +1,13 @@
+[Unit]
+Description=Populate IP Geolocation for Suricata Alerts
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/suriweb/backend
+ExecStart=/opt/suriweb/venv/bin/python3 /opt/suriweb/backend/populate_geolocation.py
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

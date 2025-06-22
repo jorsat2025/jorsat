@@ -1,0 +1,12 @@
+[Unit]
+Description=Restore ARPTables rules
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c "/usr/sbin/arptables-restore < /etc/arptables/rules.arpt"
+ExecReload=/bin/bash -c "/usr/sbin/arptables-restore < /etc/arptables/rules.arpt"
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

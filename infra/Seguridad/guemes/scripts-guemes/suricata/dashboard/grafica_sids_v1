@@ -1,0 +1,128 @@
+#!/opt/suricata/env/bin/python3
+
+import sys
+import json
+import pandas as pd
+import matplotlib.pyplot as plt
+import datetime
+import requests
+import re
+from collections import Counter
+from pathlib import Path
+
+# --- Configuración ---
+EVE_LOG = "/opt/suricata/var/log/suricata/eve.json"
+FAST_LOG = "/opt/suricata/var/log/suricata/fast.log"
+RULES_DIR = "/opt/suricata/var/lib/suricata/rules"
+TELEGRAM_TOKEN = "7893384536:AAHa-LQpW73QVyXM9UVk_mee-r9RBaZgvEY"
+TELEGRAM_CHAT_ID = "2135636660"
+
+# --- Fecha: parámetro o hoy ---
+if len(sys.argv) > 1:
+    try:
+        day = datetime.datetime.strptime(sys.argv[1], "%Y-%m-%d").date()
+    except ValueError:
+        print("⚠️ Formato inválido. Usá: ./grafico-sids.py AAAA-MM-DD")
+        sys.exit(1)
+else:
+    day = datetime.date.today()
+
+IMG_OUTPUT = f"/opt/suricata/var/log/suricata/graphs/sids-{day}.png"
+Path("/opt/suricata/var/log/suricata/graphs").mkdir(parents=True, exist_ok=True)
+
+sids = []
+
+# --- Leer eve.json ---
+try:
+    with open(EVE_LOG, "r") as f:
+        for line in f:
+            try:
+                data = json.loads(line)
+                if data.get("event_type") in ["alert", "drop"]:
+                    ts = data.get("timestamp", "")
+                    sid = data.get("alert", {}).get("sid")
+                    if sid and ts.startswith(str(day)):
+                        sids.append(sid)
+            except json.JSONDecodeError:
+                continue
+except FileNotFoundError:
+    print("⚠️ No se encontró eve.json")
+
+# --- Leer fast.log ---
+date_str = day.strftime("%m/%d/%Y-")
+sid_pattern = re.compile(r"\[\d+:(\d+):\d+\]")
+
+try:
+    with open(FAST_LOG, "r") as f:
+        for line in f:
+            if date_str in line:
+                match = sid_pattern.search(line)
+                if match:
+                    sids.append(int(match.group(1)))
+except FileNotFoundError:
+    print("⚠️ No se encontró fast.log")
+
+# --- Buscar mensaje del SID en los .rules ---
+def obtener_msg_por_sid(sid):
+    pattern = re.compile(rf'sid:{sid};')
+    try:
+        for rule_file in Path(RULES_DIR).glob("*.rules"):
+            with open(rule_file, "r", encoding="utf-8", errors="ignore") as f:
+                for line in f:
+                    if pattern.search(line):
+                        msg_match = re.search(r'msg:"([^"]+)"', line)
+                        if msg_match:
+                            return msg_match.group(1)
+    except Exception:
+        return None
+    return None
+
+# --- Contar y graficar ---
+counter = Counter(sids)
+top_sids = counter.most_common(10)
+
+if not top_sids:
+    print(f"📉 No hay SIDs activados el día {day}.")
+    sys.exit(0)
+
+# --- Preparar etiquetas descriptivas ---
+labels = []
+for sid, count in top_sids:
+    msg = obtener_msg_por_sid(sid)
+    if msg:
+        msg = msg.replace("\n", " ").strip()
+        label = f"{sid}\n{msg[:25]}…" if len(msg) > 25 else f"{sid}\n{msg}"
+    else:
+        label = str(sid)
+    labels.append(label)
+
+df = pd.DataFrame(top_sids, columns=["SID", "Eventos"])
+df["Etiqueta"] = labels
+
+# --- Graficar ---
+plt.figure(figsize=(12, 6))
+plt.bar(df["Etiqueta"], df["Eventos"], color="darkred")
+plt.title(f"Top 10 SIDs activados - {day}")
+plt.xlabel("SID + Mensaje")
+plt.ylabel("Eventos")
+plt.xticks(rotation=30, ha='right')
+plt.grid(True)
+plt.tight_layout()
+plt.savefig(IMG_OUTPUT)
+print(f"✅ Gráfico guardado en {IMG_OUTPUT}")
+
+# --- Enviar por Telegram ---
+with open(IMG_OUTPUT, "rb") as img:
+    response = requests.post(
+        f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto",
+        data={
+            "chat_id": TELEGRAM_CHAT_ID,
+            "caption": f"📊 Top 10 SIDs activados - {day}"
+        },
+        files={"photo": img}
+    )
+
+if response.status_code == 200:
+    print("📲 Enviado por Telegram con éxito.")
+else:
+    print("⚠️ Error al enviar a Telegram:", response.text)

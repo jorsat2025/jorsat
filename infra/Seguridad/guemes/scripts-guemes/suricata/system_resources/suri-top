@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# 🧠 Suricata Resource Monitor - vRack Demencial Edition
+
+EVE_LOG="/var/log/suricata/eve.json"
+FAST_LOG="/var/log/suricata/fast.log"
+RULES_DIR="/opt/suricata/var/lib/suricata/rules"
+LOG_DIR="/opt/suricata/var/log/suricata"
+
+echo "== 🧠 Monitor de Actividad de Suricata =="
+
+# Buscar PID
+PID=$(pgrep -f "suricata.*-q 0")
+if [ -z "$PID" ]; then
+    echo "❌ Suricata no está corriendo en NFQUEUE 0"
+    exit 1
+fi
+
+# Uso de CPU y RAM
+CPU=$(ps -p $PID -o %cpu --no-headers | awk '{printf "%.1f", $1}')
+MEM_PCT=$(ps -p $PID -o %mem --no-headers | awk '{printf "%.1f", $1}')
+MEM_KB=$(grep VmRSS /proc/$PID/status | awk '{print $2}')
+MEM_GB=$(echo "scale=2; $MEM_KB / 1024 / 1024" | bc)
+CMD=$(ps -p $PID -o cmd --no-headers)
+
+echo "📌 PID: $PID"
+echo "🧠 CPU: $CPU %"
+echo "🧠 RAM: $MEM_PCT % ($MEM_GB GB)"
+echo "⚙️  CMD: $CMD"
+echo ""
+
+# Uso de disco
+echo "💽 Tamaño total de logs en $LOG_DIR:"
+du -sh "$LOG_DIR"
+echo ""
+
+echo "📁 Tamaño individual de logs:"
+du -hs "$LOG_DIR"/* 2>/dev/null | sort -hr
+echo ""
+
+# Top SIDs
+echo "🔥 SIDs más activos (eve.json y fast.log):"
+
+if [[ ! -s "$EVE_LOG" && ! -s "$FAST_LOG" ]]; then
+    echo "❌ No se encontraron SIDs. Logs vacíos."
+    exit 0
+fi
+
+grep -Eo '"sid":[0-9]+' "$EVE_LOG" "$FAST_LOG" 2>/dev/null \
+  | grep -Eo '[0-9]+' \
+  | sort | uniq -c | sort -nr | head -n 10 \
+  | while read COUNT SID; do
+      FILE=$(grep -rl "sid:$SID;" "$RULES_DIR" 2>/dev/null | head -n1)
+      FILE_BASE=$(basename "$FILE")
+      [[ -z "$FILE_BASE" ]] && FILE_BASE="(no encontrado)"
+      echo "🛡️  SID $SID - $COUNT eventos - Archivo: $FILE_BASE"
+  done
+
+echo ""
+echo "✅ Fin del análisis. Ejecutado: $(date)"

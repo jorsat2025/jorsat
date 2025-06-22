@@ -1,0 +1,9 @@
+[Unit]
+Description=Ejecutar limpieza semanal de logs de ClamAV
+
+[Timer]
+OnCalendar=Sun *-*-* 04:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

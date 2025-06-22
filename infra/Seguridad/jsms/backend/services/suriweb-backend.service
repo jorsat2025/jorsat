@@ -1,0 +1,19 @@
+[Unit]
+Description=Servicio backend Flask para alertas Suricata
+After=network.target
+Wants=network-online.target
+
+
+[Service]
+WorkingDirectory=/opt/suriweb/backend
+ExecStart=/opt/suriweb/env/bin/python3 /opt/suriweb/backend/app.py
+Environment="PATH=/opt/suriweb/env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+Environment="PYTHONPATH=/opt/suriweb/venv/lib/python3.11/site-packages"
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/suriweb-backend.log
+StandardError=append:/var/log/suriweb-backend.err.log
+
+
+[Install]
+WantedBy=multi-user.target

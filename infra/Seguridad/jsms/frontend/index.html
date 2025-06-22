@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard SuriWeb</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Leaflet MarkerCluster -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        nav {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            margin: 0 10px;
+            padding: 10px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        canvas {
+            display: block;
+            margin: 20px auto;
+            max-width: 500px;
+        }
+
+        table {
+            width: 95%;
+            margin: 0 auto;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #222;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #2a2a2a;
+        }
+
+        .permitido {
+            color: #00ff88;
+        }
+
+        .bloqueado {
+            color: #ff5555;
+            font-weight: bold;
+        }
+
+        #map-container {
+            width: 90%;
+            height: 500px;
+            margin: 20px auto;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Dashboard SuriWeb</h1>
+    <nav>
+        <button onclick="loadData('alerts')">Alertas</button>
+        <button onclick="loadData('dns')">DNS</button>
+        <button onclick="loadData('http')">HTTP</button>
+        <button onclick="loadData('drops')">Drops</button>
+        <button onclick="exportCSV()">Exportar CSV</button>
+        <button onclick="window.open('mapa.html', '_blank')">Mapa</button>
+    </nav>
+
+    <h3 style="text-align:center;">Total de eventos: <span id="total-count">0</span></h3>
+    <canvas id="pieChart"></canvas>
+
+    <table id="data-table">
+        <thead id="table-head"></thead>
+        <tbody id="table-body"></tbody>
+    </table>
+
+    <div id="map-container"></div>
+
+    <script>
+        let currentData = [];
+        let pieChart = null;
+        let mapInstance = null;
+        let markerCluster = null;
+
+        function loadData(type) {
+            document.getElementById("map-container").style.display = "none";
+
+            fetch(`/${type}`)
+                .then(response => response.json())
+                .then(data => {
+                    currentData = data;
+                    const tableHead = document.getElementById("table-head");
+                    const tableBody = document.getElementById("table-body");
+                    const totalCount = document.getElementById("total-count");
+
+                    tableHead.innerHTML = "";
+                    tableBody.innerHTML = "";
+
+                    if (data.length === 0) {
+                        tableHead.innerHTML = "<tr><th>No hay datos</th></tr>";
+                        return;
+                    }
+
+                    totalCount.innerText = data.reduce((sum, row) => sum + (parseInt(row.cantidad) || 0), 0);
+
+                    const headers = Object.keys(data[0]);
+                    let headerRow = "<tr>";
+                    headers.forEach(key => {
+                        headerRow += `<th>${key}</th>`;
+                    });
+                    headerRow += "</tr>";
+                    tableHead.innerHTML = headerRow;
+
+                    data.forEach(row => {
+                        let rowHtml = "<tr>";
+                        headers.forEach(key => {
+                            let value = row[key];
+                            let cssClass = "";
+                            if (key === "estado") {
+                                cssClass = (value === "bloqueado") ? "bloqueado" : "permitido";
+                            }
+                            rowHtml += `<td class="${cssClass}">${value !== undefined ? value : ''}</td>`;
+                        });
+                        rowHtml += "</tr>";
+                        tableBody.innerHTML += rowHtml;
+                    });
+
+                    const labels = data.map(d => d.valor);
+                    const values = data.map(d => d.cantidad);
+
+                    const backgroundColors = labels.map((_, i) =>
+                        `hsl(${(i * 360 / labels.length)}, 70%, 50%)`
+                    );
+
+                    if (pieChart) pieChart.destroy();
+
+                    const ctx = document.getElementById('pieChart').getContext('2d');
+                    pieChart = new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Top eventos',
+                                data: values,
+                                backgroundColor: backgroundColors
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    labels: { color: 'white' }
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error("Error al cargar los datos:", error);
+                });
+        }
+
+        function exportCSV() {
+            if (currentData.length === 0) {
+                alert("No hay datos para exportar.");
+                return;
+            }
+
+            const headers = Object.keys(currentData[0]);
+            const csvRows = [headers.join(",")];
+
+            currentData.forEach(row => {
+                const values = headers.map(h => `"${(row[h] || "").toString().replace(/"/g, '""')}"`);
+                csvRows.push(values.join(","));
+            });
+
+            const csvData = new Blob([csvRows.join("\n")], { type: "text/csv" });
+            const url = window.URL.createObjectURL(csvData);
+            const a = document.createElement("a");
+            a.setAttribute("hidden", "");
+            a.setAttribute("href", url);
+            a.setAttribute("download", "suriweb_export.csv");
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function loadMap() {
+            fetch('/geo-alerts')
+                .then(res => res.json())
+                .then(data => {
+                    if (!Array.isArray(data) || data.length === 0) {
+                        alert("No se encontraron datos de geolocalización.");
+                        return;
+                    }
+
+                    document.getElementById("map-container").style.display = "block";
+
+                    if (!mapInstance) {
+                        mapInstance = L.map('map-container').setView([0, 0], 2);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenStreetMap contributors'
+                        }).addTo(mapInstance);
+                        markerCluster = L.markerClusterGroup();
+                        mapInstance.addLayer(markerCluster);
+                    } else {
+                        markerCluster.clearLayers();
+                    }
+
+                    data.forEach(event => {
+                        const { latitude, longitude, ip, signature, country, city } = event;
+
+                        if (!latitude || !longitude) return;
+
+                        const marker = L.marker([latitude, longitude]);
+                        marker.bindPopup(`
+                            <b>IP:</b> ${ip}<br>
+                            <b>Firma:</b> ${signature}<br>
+                            <b>Ubicación:</b> ${city || 'Desconocida'}, ${country || ''}
+                        `);
+                        markerCluster.addLayer(marker);
+                    });
+                })
+                .catch(err => {
+                    console.error("Error al cargar geo-alerts:", err);
+                    alert("No se pudo cargar el mapa.");
+                });
+        }
+
+        window.onload = () => loadData('alerts');
+    </script>
+</body>
+
+</html>

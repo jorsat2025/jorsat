@@ -1,0 +1,27 @@
+# 🧠 SURICATA NINJA RULES - CUÁNTICO PACK
+# Autor: Jose Luis 
+# Objetivo: Bloquear bots, malware, RATs, phishing, DNS tuneling y falsos Steam
+
+# 🔥 1. DROP bots y escaneos conocidos
+alert http any any -> $HOME_NET any (msg:"[NINJA] BotNet UA - curl/wget"; flow:established,to_server; http.user_agent; content:"curl"; nocase; classtype:bad-unknown; sid:9000001; rev:1;)
+drop http any any -> $HOME_NET any (msg:"[NINJA] Bot UA - python-requests detected"; http.user_agent; content:"python-requests"; nocase; sid:9000002; rev:1;)
+drop http any any -> $HOME_NET any (msg:"[NINJA] Suspicious UA - masscan/zgrab"; http.user_agent; content:"zgrab"; nocase; sid:9000003; rev:1;)
+
+# 💣 2. Bloqueo de DNS tunneling (iodine, dnscat)
+drop udp any any -> any 53 (msg:"[NINJA] DNS tunneling - long QNAME"; dns.query; content:"."; content:"."; distance:1; within:255; pcre:"/([a-z0-9]{10,}\.){3,}/"; sid:9000010; rev:1;)
+
+# 🎭 3. Steam falsificado / actividad sospechosa
+alert http any any -> $HOME_NET any (msg:"[NINJA] Fake Steam domain"; flow:to_server,established; http.host; pcre:"/steampowered\.su|steamcommunity\.xyz|steam.*login/"; sid:9000015; rev:1;)
+
+# 💀 4. Detectar C2 beaconing por frecuencia
+alert tcp $HOME_NET any -> any any (msg:"[NINJA] Possible C2 Beacon - 60s interval"; flow:established; threshold:type threshold, track by_src, count 5, seconds 60; sid:9000020; rev:1;)
+
+# 💸 5. URLs phishing comunes (zip, iso, banking)
+drop http any any -> $HOME_NET any (msg:"[NINJA] Suspicious phishing URL - .zip domain"; http.host; endswith:".zip"; sid:9000025; rev:1;)
+drop http any any -> $HOME_NET any (msg:"[NINJA] Phishing Bank pattern"; http.uri; content:"login"; http.host; pcre:"/.*(ban|bank|banco)[a-z0-9]*\.com\.br/"; sid:9000026; rev:1;)
+
+# 🕷️ 6. Bloqueo de trackers torrent
+include: ninja-bittorrent.rules
+
+# 🎯 7. Extra: bloquear IPs Tor (regeneradas por script externo)
+include: tor-exit-block.rules

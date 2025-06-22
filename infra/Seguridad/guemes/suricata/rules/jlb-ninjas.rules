@@ -1,0 +1,6 @@
+drop http any any -> $HOME_NET any (msg:"[JLB-NINJA] Phishing sospechoso - URL engañosa detectada"; flow:to_server,established; http.host; content:"paypal."; nocase; pcre:"/paypal\.(ru|su|tk|ml|cf)/"; sid:9200001; rev:1;)
+drop http any any -> $HOME_NET any (msg:"[JLB-NINJA] Dominio tipo Steam falso detectado"; http.host; pcre:"/(steamcommunity|steampowered)\.(ru|xyz|top)/"; flow:to_server,established; sid:9200002; rev:1;)
+drop http any any -> $HOME_NET any (msg:"[JLB-NINJA] CnC HTTP beacon - patrón KeepAlive sospechoso"; content:"User-Agent|3A| Mozilla/5.0"; http.header; content:"Keep-Alive|3A|"; http.header; distance:1; within:80; content:"Connection|3A| keep-alive"; http.header; distance:1; within:60; sid:9200003; rev:1;)
+drop tcp $EXTERNAL_NET any -> $HOME_NET 445 (msg:"[JLB-NINJA] Intento de explotación SMB - EternalBlue?"; flow:to_server,established; content:"|00 00 00|"; depth:3; detection_filter:track by_src, count 5, seconds 30; sid:9200004; rev:1;)
+drop http any any -> $HOME_NET any (msg:"[JLB-NINJA] Intento de minado de criptomonedas vía web"; flow:to_server,established; content:"coinhive.min.js"; nocase; sid:9200005; rev:1;)
+drop udp any any -> any 53 (msg:"[JLB-NINJA] Posible exfiltración DNS - QNAME sospechoso largo"; dns.query; pcre:"/([a-z0-9]{15,}\.){3,}/"; sid:9200006; rev:1;)
