@@ -3,10 +3,14 @@ Description=Suricata IPS (NFQUEUE 0)
 After=network.target
 
 [Service]
-ExecStart=/opt/suricata-7/bin/suricata -c /opt/suricata-7/etc/suricata/suricata.yaml -q 0 --pidfile /var/run/suricata.pid
-ExecReload=/bin/kill -HUP $MAINPID
-Restart=on-failure
-PIDFile=/var/run/suricata.pid
+ExecStart=/opt/suricata/bin/suricata -c /opt/suricata/etc/suricata/suricata.yaml -q 0 --pidfile /var/run/suricata-q0.pidRestart=always
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+ProtectHome=yes
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
 
 [Install]
 WantedBy=multi-user.target

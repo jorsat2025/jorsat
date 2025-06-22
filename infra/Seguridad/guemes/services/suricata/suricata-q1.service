@@ -1,0 +1,20 @@
+[Unit]
+Description=Suricata IPS (NFQUEUE 1)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/opt/suricata/bin/suricata -c /opt/suricata/etc/suricata/suricata-q1.yaml -q 1 --pidfile /var/run/suricata-q1>ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+
+# Seguridad opcional (solo si tu version de systemd lo soporta)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+
+[Install]
+WantedBy=multi-user.target
