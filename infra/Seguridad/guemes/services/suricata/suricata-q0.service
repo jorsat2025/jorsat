@@ -3,7 +3,8 @@ Description=Suricata IPS (NFQUEUE 0)
 After=network.target
 
 [Service]
-ExecStart=/opt/suricata/bin/suricata -c /opt/suricata/etc/suricata/suricata.yaml -q 0 --pidfile /var/run/suricata-q0.pidRestart=always
+ExecStart=/opt/suricata/bin/suricata -c /opt/suricata/etc/suricata/suricata.yaml -q 0 --pidfile /var/run/suricata-q0.pid
+Restart=always
 NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=full
