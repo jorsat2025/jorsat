@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/opt/suricata/bin/suricata -c /opt/suricata/etc/suricata/suricata-q1.yaml -q 1 --pidfile /var/run/suricata-q1
+ExecStart=/opt/suricata/bin/suricata -c /opt/suricata/etc/suricata/suricata-q1.yaml -q 1 --pidfile /var/run/suricata-q1.pid
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 
