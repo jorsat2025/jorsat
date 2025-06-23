@@ -1,0 +1,17 @@
+/opt/suricata/var/log/suricata/eve.json
+/opt/suricata/var/log/suricata/fast.log
+/opt/suricata/var/log/suricata/eve-q1.json
+/opt/suricata/var/log/suricata/fast-log-q1.log {
+    daily
+    missingok
+    rotate 7
+    compress
+    delaycompress
+    notifempty
+    create 640 root adm
+    sharedscripts
+    postrotate
+        systemctl restart suricata-q0.service > /dev/null 2>/dev/null || true
+        systemctl restart suricata-q1.service > /dev/null 2>/dev/null || true
+    endscript
+}
