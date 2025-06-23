@@ -122,5 +122,5 @@ Archivo: `/etc/logrotate.d/suricata-multi`
 
 ---
 
-Creado con ❤️ por un sysadmin paranoide y ChatGPT 😎
+Creado con ❤️ por un sysadmin paranoide 😎
 
