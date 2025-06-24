@@ -1,42 +1,50 @@
-*mangle
-:PREROUTING ACCEPT [2595425:1468683716]
-:INPUT ACCEPT [2297961:1354782949]
-:FORWARD ACCEPT [295278:113806667]
-:OUTPUT ACCEPT [1501525:1347215630]
-:POSTROUTING ACCEPT [1796280:1460941536]
--A PREROUTING -p icmp -j NFQUEUE --queue-num 0
+*nat
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+-A PREROUTING -s 10.10.10.13/32 -p tcp --dport 80 -j RETURN
+-A PREROUTING -s 10.10.10.13/32 -p tcp --dport 443 -j RETURN
+-A PREROUTING -i lan -p tcp --dport 80 -j REDIRECT --to-ports 4555
+-A PREROUTING -i lan -p tcp --dport 443 -j REDIRECT --to-ports 4556
+-A POSTROUTING -o wan -j MASQUERADE
 COMMIT
+
+*mangle
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+# Trafico Squid por q0
+-A PREROUTING -i lan -p tcp --dport 4555 -j NFQUEUE --queue-num 0
+-A PREROUTING -i lan -p tcp --dport 4556 -j NFQUEUE --queue-num 0
+# ICMP y DNS sospechoso por q1
+-A PREROUTING -i lan -p icmp -j NFQUEUE --queue-num 1
+-A PREROUTING -i lan -p udp --dport 53 -j NFQUEUE --queue-num 1
+COMMIT
+
 *filter
-:INPUT DROP [5687:703367]
+:INPUT DROP [0:0]
 :FORWARD DROP [0:0]
-:OUTPUT ACCEPT [1501525:1347215630]
+:OUTPUT ACCEPT [0:0]
+# INPUT permitido
 -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
--A INPUT -p tcp -m tcp --dport 4555 -j ACCEPT
--A INPUT -p tcp -m tcp --dport 4556 -j ACCEPT
--A INPUT -p tcp -m tcp --dport 777 -j ACCEPT
--A INPUT -p udp -m udp --sport 53 -j ACCEPT
+-A INPUT -p tcp --dport 4555 -j ACCEPT
+-A INPUT -p tcp --dport 4556 -j ACCEPT
+-A INPUT -p tcp --dport 777 -j ACCEPT
+-A INPUT -p udp --sport 53 -j ACCEPT
 -A INPUT -p icmp -m limit --limit 1/sec --limit-burst 4 -j ACCEPT
 -A INPUT -m limit --limit 2/min -j LOG --log-prefix "DROP INPUT: "
--A FORWARD -p icmp -j NFQUEUE --queue-num 0
--A FORWARD -j NFQUEUE --queue-num 0
+
+# FORWARD
+-A FORWARD -i lan -o wan -j NFQUEUE --queue-num 0
+-A FORWARD -i wan -o lan -j NFQUEUE --queue-num 0
 -A FORWARD -s 10.10.10.0/24 -d 10.10.100.0/25 -j ACCEPT
 -A FORWARD -s 10.10.10.13/32 -j ACCEPT
 -A FORWARD -d 10.10.10.13/32 -j ACCEPT
--A FORWARD -i lan -o wan -j NFQUEUE --queue-num 0
--A FORWARD -i wan -o lan -j NFQUEUE --queue-num 1
--A FORWARD -p udp -m udp --dport 53 -j ACCEPT
--A FORWARD -p udp -m udp --sport 53 -j ACCEPT
--A FORWARD -p tcp -m tcp --dport 4555 -j ACCEPT
--A FORWARD -p tcp -m tcp --dport 4556 -j ACCEPT
-COMMIT
-*nat
-:PREROUTING ACCEPT [25680:1873901]
-:INPUT ACCEPT [12673:654972]
-:OUTPUT ACCEPT [11919:726335]
-:POSTROUTING ACCEPT [0:0]
--A PREROUTING -s 10.10.10.13/32 -p tcp -m tcp --dport 80 -j RETURN
--A PREROUTING -s 10.10.10.13/32 -p tcp -m tcp --dport 443 -j RETURN
--A PREROUTING -i lan -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 4555
--A PREROUTING -i lan -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 4556
--A POSTROUTING -o wan -j MASQUERADE
+-A FORWARD -p udp --dport 53 -j ACCEPT
+-A FORWARD -p udp --sport 53 -j ACCEPT
+-A FORWARD -p tcp --dport 4555 -j ACCEPT
+-A FORWARD -p tcp --dport 4556 -j ACCEPT
 COMMIT
