@@ -1,0 +1,12 @@
+root@volder:/opt/dionaea/build# cat  /etc/systemd/system/dionaea.service
+[Unit]
+Description=Dionaea Honeypot Service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/dionaea -c /usr/local/etc/dionaea/dionaea.cfg
+Environment=PYTHONPATH=/usr/local/lib/python3.10/dist-packages
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
