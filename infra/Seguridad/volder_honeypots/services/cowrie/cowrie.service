@@ -1,0 +1,15 @@
+[Unit]
+Description=Cowrie SSH/Telnet Honeypot
+After=network.target
+
+[Service]
+Type=forking
+User=cowrie
+Group=cowrie
+WorkingDirectory=/opt/cowrie
+ExecStart=/bin/bash -c 'source /opt/cowrie/cowrie-env/bin/activate && /opt/cowrie/bin/cowrie start'
+ExecStop=/bin/bash -c 'source /opt/cowrie/cowrie-env/bin/activate && /opt/cowrie/bin/cowrie stop'
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
