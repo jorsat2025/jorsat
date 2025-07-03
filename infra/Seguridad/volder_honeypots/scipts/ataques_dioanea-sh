@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# IP del honeypot (ajustá si es IP LAN o pública)
+IP_HONEYPOT="192.168.100.25"
+
+# Puertos comunes de Dionaea
+PUERTOS=(21 23 42 53 80 135 443 445 1433 1723 1883 3306 5060 5061 27017 9100 11211)
+
+echo "Iniciando escaneo y pruebas contra $IP_HONEYPOT"
+
+# 1. Escaneo general
+nmap -sT -Pn -p$(IFS=,; echo "${PUERTOS[*]}") $IP_HONEYPOT
+
+# 2. Conexiones manuales
+for PORT in "${PUERTOS[@]}"; do
+    echo -e "\n\n>> Conectando a $IP_HONEYPOT:$PORT..."
+    timeout 3 bash -c "</dev/tcp/$IP_HONEYPOT/$PORT" && echo "✔ Puerto $PORT abierto"
+done
+
+# 3. Algunas pruebas específicas
+curl -m 3 http://$IP_HONEYPOT/ || echo "curl falló"
+echo "USER test" | nc -v -w 3 $IP_HONEYPOT 21 || echo "ftp falló"
+echo "ehlo test" | nc -v -w 3 $IP_HONEYPOT 25 || echo "smtp falló"
+echo "GET / HTTP/1.1" | nc -v -w 3 $IP_HONEYPOT 80 || echo "http falló"
+
+echo "Finalizado."
