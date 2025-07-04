@@ -1,14 +1,53 @@
+version: 2
 authtoken: 2zPU2AjVl3FuhzepoFYB3KDZucf_41VkuVumBBrRg3Gk2S1ft
-version: "2"
+
 tunnels:
-  cowrie-ssh:
+  cowrie:
+    proto: tcp
     addr: 2222
+    remote_addr: 1.tcp.sa.ngrok.io:21625
+
+  mysql:
     proto: tcp
-
-  http-web:
-    addr: 80
-    proto: http
-
-  mysql-db:
     addr: 3306
+    remote_addr: 1.tcp.sa.ngrok.io:21629
+
+  ftp:
     proto: tcp
+    addr: 21
+    remote_addr: 1.tcp.sa.ngrok.io:21630
+
+  http:
+    proto: tcp
+    addr: 80
+    remote_addr: 1.tcp.sa.ngrok.io:21631
+
+  telnet:
+    proto: tcp
+    addr: 23
+    remote_addr: 1.tcp.sa.ngrok.io:21632
+
+  netbios_ns:
+    proto: tcp
+    addr: 137
+    remote_addr: 1.tcp.sa.ngrok.io:21633
+
+  netbios_dgm:
+    proto: tcp
+    addr: 138
+    remote_addr: 1.tcp.sa.ngrok.io:21634
+
+  netbios_session:
+    proto: tcp
+    addr: 139
+    remote_addr: 1.tcp.sa.ngrok.io:21635
+
+  smb:
+    proto: tcp
+    addr: 445
+    remote_addr: 1.tcp.sa.ngrok.io:21636
+
+  mssql:
+    proto: tcp
+    addr: 1433
+    remote_addr: 1.tcp.sa.ngrok.io:21637
