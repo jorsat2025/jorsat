@@ -1,0 +1,14 @@
+authtoken: 2zPU2AjVl3FuhzepoFYB3KDZucf_41VkuVumBBrRg3Gk2S1ft
+version: "2"
+tunnels:
+  cowrie-ssh:
+    addr: 2222
+    proto: tcp
+
+  http-web:
+    addr: 80
+    proto: http
+
+  mysql-db:
+    addr: 3306
+    proto: tcp

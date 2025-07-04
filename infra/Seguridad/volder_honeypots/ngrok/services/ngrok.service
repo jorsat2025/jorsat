@@ -1,0 +1,15 @@
+[Unit]
+Description=Ngrok Autotunnel
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/ngrok start --all --log stdout --log-format json
+Restart=always
+User=root
+WorkingDirectory=/root
+Environment=NGROK_CONFIG=/root/.config/ngrok/ngrok.yml
+StandardOutput=append:/var/log/ngrok/ngrok.log
+StandardError=append:/var/log/ngrok/ngrok.err
+
+[Install]
+WantedBy=multi-user.target
