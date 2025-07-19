@@ -78,4 +78,4 @@ Basado en la guía: https://learnoci.cloud/install-t-pot-honey-pot-in-oci-c583cd
 
 ---
 
-Guía generada automáticamente con ❤️ por ChatGPT y el comando `fix.sh`.
+
