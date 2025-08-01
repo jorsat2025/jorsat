@@ -32,8 +32,9 @@ while true; do
   echo "7) Ver estado de nodos (Ready/Not Ready)"
   echo "8) Ver uso de CPU por nodo"
   echo "9) Ver uso de memoria por nodo"
-  echo "10) Salir"
-  read -rp "Elegí una opción [1-10]: " opcion
+  echo "10) Ver estado de PVCs y StorageClasses"
+  echo "11) Salir"
+  read -rp "Elegí una opción [1-11]: " opcion
 
   case "$opcion" in
     1)
@@ -99,6 +100,14 @@ while true; do
       kubectl top nodes | sort -k5 -rh
       ;;
     10)
+      echo -e "\n💾 Chequeando PVCs en Pending y StorageClasses:"
+      echo -e "\n🔹 PVCs en Pending:"
+      kubectl get pvc -A --field-selector=status.phase=Pending || echo -e "${GREEN}✅ No hay PVCs en Pending${NC}"
+
+      echo -e "\n🔹 StorageClasses sin provisioner:"
+      kubectl get storageclass -o wide | awk '$2=="" {print}' || echo -e "${GREEN}✅ Todas las StorageClasses tienen provisioner${NC}"
+      ;;
+    11)
       echo "👋 Hasta la vista..."
       exit 0
       ;;
