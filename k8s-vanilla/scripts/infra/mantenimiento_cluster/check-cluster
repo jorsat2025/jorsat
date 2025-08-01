@@ -7,17 +7,6 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-# Chequeo de dependencias
-command -v jq >/dev/null 2>&1 || { echo -e "${RED}❌ Falta jq. Instalalo con: sudo apt install jq${NC}"; exit 1; }
-command -v kubectl >/dev/null 2>&1 || { echo -e "${RED}❌ Falta kubectl. Instalalo o cargá tu kubeconfig${NC}"; exit 1; }
-
-# Chequeo de acceso al cluster
-kubectl cluster-info >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
-  echo -e "${RED}❌ No hay acceso al cluster. Revisá tu ~/.kube/config${NC}"
-  exit 1
-fi
-
 # Carpeta de logs
 LOG_DIR="/var/log/k8s-health"
 mkdir -p "$LOG_DIR"
@@ -35,15 +24,17 @@ while true; do
   echo ""
   echo "🧠 Menú de chequeo de clúster Kubernetes:"
   echo "1) Ver pods fallando en todos los namespaces"
-  echo "2) Ver pods en estado Pending"
-  echo "3) Ver logs de pods en CrashLoopBackOff"
-  echo "4) Ver PVCs con errores"
-  echo "5) Ver últimos eventos del cluster"
-  echo "6) Ver estado de nodos (Ready/Not Ready)"
-  echo "7) Ver uso de CPU por nodo"
-  echo "8) Ver uso de memoria por nodo"
-  echo "9) Salir"
-  read -rp "Elegí una opción [1-9]: " opcion
+  echo "2) Ver estado completo de pods (kubectl get pods -A -o wide)"
+  echo "3) Ver pods en estado Pending"
+  echo "4) Ver logs de pods en CrashLoopBackOff"
+  echo "5) Ver PVCs con errores"
+  echo "6) Ver últimos eventos del cluster"
+  echo "7) Ver estado de nodos (Ready/Not Ready)"
+  echo "8) Ver uso de CPU por nodo"
+  echo "9) Ver uso de memoria por nodo"
+  echo "10) Ver estado de PVCs y StorageClasses"
+  echo "11) Salir"
+  read -rp "Elegí una opción [1-11]: " opcion
 
   case "$opcion" in
     1)
@@ -60,10 +51,14 @@ while true; do
           done
       ;;
     2)
+      echo -e "\n📦 Estado completo de pods:"
+      kubectl get pods -A -o wide
+      ;;
+    3)
       echo -e "\n⏳ Listando pods en estado Pending:"
       kubectl get pods --all-namespaces --field-selector=status.phase=Pending || echo -e "${GREEN}✅ No hay pods en Pending${NC}"
       ;;
-    3)
+    4)
       echo -e "\n🔍 Buscando pods en CrashLoopBackOff:"
       pods=$(kubectl get pods --all-namespaces -o json \
         | jq -r '.items[] | select(.status.containerStatuses[]?.state.waiting.reason=="CrashLoopBackOff") | "\(.metadata.namespace) \(.metadata.name)"')
@@ -77,15 +72,15 @@ while true; do
         done
       fi
       ;;
-    4)
+    5)
       echo -e "\n💾 Listando PVCs con problemas:"
       kubectl get pvc --all-namespaces | grep -Ev 'Bound|NAME' || echo -e "${GREEN}✅ Todos los PVCs están Bound${NC}"
       ;;
-    5)
+    6)
       echo -e "\n📋 Últimos eventos del cluster:"
       kubectl get events --all-namespaces --sort-by=.metadata.creationTimestamp | tail -n 30
       ;;
-    6)
+    7)
       echo -e "\n🖥️  Estado de nodos:"
       kubectl get nodes -o custom-columns="NAME:.metadata.name,STATUS:.status.conditions[-1].type" --no-headers \
         | while read -r name status; do
@@ -96,15 +91,23 @@ while true; do
             fi
           done
       ;;
-    7)
+    8)
       echo -e "\n📊 Uso de CPU por nodo:"
       kubectl top nodes | sort -k3 -rh
       ;;
-    8)
+    9)
       echo -e "\n📈 Uso de memoria por nodo:"
       kubectl top nodes | sort -k5 -rh
       ;;
-    9)
+    10)
+      echo -e "\n💾 Chequeando PVCs en Pending y StorageClasses:"
+      echo -e "\n🔹 PVCs en Pending:"
+      kubectl get pvc -A --field-selector=status.phase=Pending || echo -e "${GREEN}✅ No hay PVCs en Pending${NC}"
+
+      echo -e "\n🔹 StorageClasses sin provisioner:"
+      kubectl get storageclass -o wide | awk '$2=="" {print}' || echo -e "${GREEN}✅ Todas las StorageClasses tienen provisioner${NC}"
+      ;;
+    11)
       echo "👋 Hasta la vista..."
       exit 0
       ;;
