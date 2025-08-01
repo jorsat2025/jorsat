@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: n8n
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n
+  namespace: n8n
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: n8n
+  template:
+    metadata:
+      labels:
+        app: n8n
+    spec:
+      containers:
+      - name: n8n
+        image: n8nio/n8n:latest
+        ports:
+        - containerPort: 5678
+        env:
+        - name: N8N_HOST
+          value: "n8n.local"
+        - name: N8N_PORT
+          value: "5678"
+        - name: N8N_PROTOCOL
+          value: "http"
+        - name: GENERIC_TIMEZONE
+          value: "America/Argentina/Buenos_Aires"
+        # ⚠️ Desactiva secure cookie para permitir HTTP sin TLS
+        - name: N8N_SECURE_COOKIE
+          value: "false"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: n8n
+  namespace: n8n
+spec:
+  type: LoadBalancer
+  selector:
+    app: n8n
+  ports:
+    - port: 80
+      targetPort: 5678
+      protocol: TCP
