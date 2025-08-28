@@ -1,0 +1,45 @@
+# values-ingress-nginx.yaml
+# Chart: ingress-nginx/ingress-nginx
+# Propósito: desplegar Ingress NGINX con Service LoadBalancer y IP fija dentro de tu pool MetalLB (10.10.100.110–119).
+# Editá 'loadBalancerIP' si querés otra IP.
+controller:
+  replicaCount: 2
+
+  ingressClass: nginx
+  ingressClassResource:
+    enabled: true
+    default: true            # lo hace la IngressClass por defecto
+    name: nginx
+
+  service:
+    type: LoadBalancer
+    loadBalancerIP: 10.10.100.118   # ⚠️ Cambiá si querés otra IP del pool MetalLB
+    externalTrafficPolicy: Local
+    # annotations:
+    #   metallb.universe.tf/allow-shared-ip: "ingress"   # opcional, si querés compartir IP entre varios Services
+
+  metrics:
+    enabled: true
+
+  admissionWebhooks:
+    enabled: true
+    patch:
+      enabled: true
+
+  config:
+    use-forwarded-headers: "true"
+    proxy-body-size: "0"
+    proxy-read-timeout: "600"
+    proxy-send-timeout: "600"
+    # enable-real-ip: "true"   # uncomment si tenés L7/L4 extra delante
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+defaultBackend:
+  enabled: false
