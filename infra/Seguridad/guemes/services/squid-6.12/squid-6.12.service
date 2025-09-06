@@ -1,0 +1,18 @@
+[Unit]
+Description=Squid 6.12 (custom prefix)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+User=squid
+Group=squid
+ExecStart=/opt/squid-6.12/sbin/squid -f /opt/squid-6.12/etc/squid.conf -sYC
+ExecReload=/opt/squid-6.12/sbin/squid -k reconfigure -f /opt/squid-6.12/etc/squid.conf
+ExecStop=/opt/squid-6.12/sbin/squid -k shutdown -f /opt/squid-6.12/etc/squid.conf
+PIDFile=/opt/squid-6.12/var/run/squid.pid
+LimitNOFILE=65536
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
