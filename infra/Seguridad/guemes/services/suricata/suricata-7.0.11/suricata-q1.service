@@ -1,0 +1,19 @@
+[Unit]
+Description=Suricata IPS (NFQUEUE q1) - DNS/ICMP sospechoso
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStartPre=/bin/rm -f /opt/suricata/var/run/suricata-q1.pid
+ExecStart=/opt/suricata/bin/suricata -c /opt/suricata/etc/suricata-q1.yaml -q 1 \
+  --set default-log-dir=/opt/suricata/var/log/suricata \
+  --set nfq.mode=accept \
+  --pidfile /opt/suricata/var/run/suricata-q1.pid
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=2
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

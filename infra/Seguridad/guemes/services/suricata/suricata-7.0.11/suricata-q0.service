@@ -1,0 +1,20 @@
+[Unit]
+Description=Suricata IPS (NFQUEUE q0) - navegación/proxy
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Limpia pidfile viejo si quedó
+ExecStartPre=/bin/rm -f /opt/suricata/var/run/suricata-q0.pid
+ExecStart=/opt/suricata/bin/suricata -c /opt/suricata/etc/suricata-q0.yaml -q 0 \
+  --set default-log-dir=/opt/suricata/var/log/suricata \
+  --set nfq.mode=accept \
+  --pidfile /opt/suricata/var/run/suricata-q0.pid
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=2
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
