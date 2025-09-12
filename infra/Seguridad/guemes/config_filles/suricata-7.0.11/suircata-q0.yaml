@@ -1,0 +1,28 @@
+%YAML 1.1
+---
+default-log-dir: /opt/suricata/var/log/suricata
+vars:
+  address-groups:
+    HOME_NET: "[10.10.10.0/24]"
+
+# Captura por NFQUEUE (IPS)
+nfq:
+  mode: inline
+  queues: [0]
+
+default-rule-path: /opt/suricata/etc/rules
+rule-files:
+  - suricata.rules
+  - jlb-core-whitelist.rules
+  - jlb-http-hardening.rules
+  - jlb-http-whitelist.rules
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: /opt/suricata/var/log/suricata/eve-q0.json
+      community-id: true
+      types: [alert, drop, http, dns, flow, tls, ssh]
+  - fast:
+      enabled: yes
+      filename: /opt/suricata/var/log/suricata/fast-log-q0.log

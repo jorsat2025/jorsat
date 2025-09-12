@@ -1,0 +1,24 @@
+%YAML 1.1
+---
+default-log-dir: /opt/suricata/var/log/suricata
+vars:
+  address-groups:
+    HOME_NET: "[10.10.10.0/24]"
+
+nfq:
+  mode: inline
+  queues: [1]
+
+default-rule-path: /opt/suricata/etc/rules
+rule-files: [suricata.rules]
+
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: /opt/suricata/var/log/suricata/eve-q1.json
+      community-id: true
+      types: [alert, drop, dns, flow]
+  - fast:
+      enabled: yes
+      filename: /opt/suricata/var/log/suricata/fast-log-q1.log
