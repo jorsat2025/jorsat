@@ -1,0 +1,12 @@
+sudo tee /etc/systemd/system/antispoof-healthcheck.timer >/dev/null <<'EOF'
+[Unit]
+Description=Ejecuta semanalmente antispoof-healthcheck
+
+[Timer]
+OnCalendar=Sun *-*-* 03:15:00
+RandomizedDelaySec=30m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF

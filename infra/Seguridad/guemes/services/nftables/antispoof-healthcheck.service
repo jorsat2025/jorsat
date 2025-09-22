@@ -1,0 +1,20 @@
+sudo tee /etc/systemd/system/antispoof-healthcheck.service >/dev/null <<'EOF'
+[Unit]
+Description=Anti-spoof healthcheck (sysctl + nft) en Guemes
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+# Logea al journal y además a /var/log/antispoof-healthcheck.log
+ExecStart=/bin/bash -lc '{
+  echo "===== $(date -Is) =====";
+  /usr/local/sbin/antispoof-healthcheck.sh;
+} 2>&1 | tee -a /var/log/antispoof-healthcheck.log'
+Nice=10
+IOSchedulingClass=best-effort
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+EOF
