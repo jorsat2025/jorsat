@@ -1,0 +1,11 @@
+# /etc/systemd/system/guemes-ruteo.service
+[Unit]
+Wants=network-online.target nftables.service
+After=network-online.target nftables.service
+
+[Service]
+Type=oneshot
+# Espera a que la interfaz LAN tenga una IPv4 asignada
+ExecStartPre=/bin/sh -c 'until ip -4 addr show dev lan | grep -q "inet "; do sleep 1; done'
+ExecStart=/usr/local/sbin/ruteo-10.10.100-nftables
+RemainAfterExit=yes
