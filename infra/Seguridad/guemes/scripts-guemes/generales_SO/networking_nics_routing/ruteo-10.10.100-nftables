@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Parámetros (podés overridear con variables de entorno)
+LAN_IF="${LAN_IF:-lan}"
+WAN_IF="${WAN_IF:-wan}"
+LAN_NET="${LAN_NET:-10.10.10.0/24}"
+DST_NET="${DST_NET:-10.10.100.0/25}"
+GATEWAY="${GATEWAY:-10.10.10.1}"
+
+echo "[+] Configurando ruta y reglas nftables para Guemes…"
+
+# --- Ruta ---
+ip route del "$DST_NET" 2>/dev/null || true
+ip route add "$DST_NET" via "$GATEWAY" dev "$LAN_IF" && \
+echo "[✓] Ruta a $DST_NET via $GATEWAY dev $LAN_IF agregada."
+
+echo
+echo "[INFO] Rutas actuales:"
+ip route show
+
+# --- nftables: NAT (postrouting) y FORWARD ---
+echo
+echo "[INFO] Verificando nftables…"
+
+# Asegurar tabla/chain NAT postrouting
+if ! nft list table inet nat >/dev/null 2>&1; then
+  nft add table inet nat
+fi
+if ! nft list chain inet nat postrouting >/dev/null 2>&1; then
+  nft add chain inet nat postrouting { type nat hook postrouting priority srcnat; policy accept; }
+fi
+# Regla MASQUERADE en WAN (si falta)
+if ! nft -a list chain inet nat postrouting 2>/dev/null | grep -q "oifname \"$WAN_IF\" masquerade"; then
+  nft add rule inet nat postrouting oifname "$WAN_IF" masquerade
+  echo "[✓] NAT (masquerade) habilitado en $WAN_IF."
+else
+  echo "[=] NAT en $WAN_IF ya estaba presente."
+fi
+
+# Asegurar tabla/chain FILTER forward
+if ! nft list table inet filter >/dev/null 2>&1; then
+  nft add table inet filter
+fi
+if ! nft list chain inet filter forward >/dev/null 2>&1; then
+  # Nota: policy accept para no romper tu ruteo si no existía la chain.
+  nft add chain inet filter forward { type filter hook forward priority 0; policy accept; }
+fi
+# Regla de forward LAN -> DST_NET (si falta)
+if ! nft -a list chain inet filter forward 2>/dev/null | grep -q "ip saddr $LAN_NET ip daddr $DST_NET accept"; then
+  nft add rule inet filter forward ip saddr "$LAN_NET" ip daddr "$DST_NET" accept
+  echo "[✓] FORWARD permitido de $LAN_NET hacia $DST_NET."
+else
+  echo "[=] Regla de FORWARD ya estaba presente."
+fi
+
+echo
+echo "[🎉] Configuración completada con nftables."
+
+# --- Persistencia (OPCIONAL) ---
+# Si usás nftables.service y querés volcar TODO el ruleset actual al arranque,
+# descomentá la línea siguiente (⚠️ sobreescribe /etc/nftables.conf con el ruleset actual):
+# nft list ruleset > /etc/nftables.conf && echo "[✓] Ruleset guardado en /etc/nftables.conf"
