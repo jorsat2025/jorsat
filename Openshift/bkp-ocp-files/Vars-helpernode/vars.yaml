@@ -2,15 +2,15 @@
 disk: vda
 helper:
   name: "helper"
-  ipaddr: "10.202.42.84"
+  ipaddr: "10.10.42.84"
 dns:
-  domain: "claro.mx"
+  domain: "gsve.com"
   clusterid: "lab-okd"
-  forwarder1: "10.202.42.84"
-  forwarder2: "10.92.55.39"
+  forwarder1: "10.10.42.84"
+  forwarder2: "10.10.10.1"
 dhcp:
-  router: "10.202.42.1"
-  bcast: "10.202.43.255"
+  router: "10.10.42.1"
+  bcast: "10.10.43.255"
   netmask: "255.255.254.0"
   poolstart: "10.202.42.85"
   poolend: "10.202.42.92"
