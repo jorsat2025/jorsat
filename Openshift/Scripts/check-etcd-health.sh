@@ -5,7 +5,7 @@
 
 NAMESPACE="openshift-etcd"
 LABEL="k8s-app=etcd"
-NODE="master0.labokdipi.claro.amx"  # ⚠️ Cambiar si estás en otro nodo master si hace falta
+NODE="master0.labogsve.com"  # ⚠️ Cambiar si estás en otro nodo master si hace falta
 
 echo "🧠 Buscando pod etcd..."
 ETCD_POD=$(oc get pods -n "$NAMESPACE" -l "$LABEL" -o name | grep "$NODE")
