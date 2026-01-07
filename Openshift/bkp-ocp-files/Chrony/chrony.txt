@@ -1,8 +1,8 @@
 cat << EOF | base64
-server ntpdserver-a.claro.amx iburst
-server ntpdserver-b.claro.amx iburst
-server ntpdserver-c.claro.amx iburst
-server ntpdserver-d.claro.amx iburst
+server ntpdserver-a.gsve.com iburst
+server ntpdserver-b.gsve.com iburst
+server ntpdserver-c.gsve.com iburst
+server ntpdserver-d.gsve.com iburst
 driftfile /var/lib/chrony/drift
 makestep 1.0 3
 rtcsync
