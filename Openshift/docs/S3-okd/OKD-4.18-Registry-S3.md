@@ -1,4 +1,4 @@
-# OKD 4.18 – Uso de OpenShift Internal Registry con Backend S3 (Claro)
+# OKD 4.18 – Uso de OpenShift Internal Registry con Backend S3
 
 ## ✨ Objetivo
 
@@ -13,7 +13,7 @@ Configurar la **image-registry** en **OKD 4.18** para que utilice un **bucket S3
 - Bucket S3 llamado **lom-mutt**
 - Accesible vía:
   ```
-  http://s3hua.claro.amx
+  http://s3hua.gsve.com
   ```
 - AccessKey y SecretKey configurados como **Secret** en OpenShift:
 
@@ -47,7 +47,7 @@ oc patch configs.imageregistry.operator.openshift.io cluster \
         "s3": {
           "bucket": "lom-mutt",
           "region": "us-east-1",
-          "regionEndpoint": "http://s3hua.claro.amx",
+          "regionEndpoint": "http://s3hua.gsve.com",
           "encrypt": false,
           "virtualHostedStyle": false
         }
