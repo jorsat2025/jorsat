@@ -1,0 +1,52 @@
+---
+disk: vda
+helper:
+  name: "helper"
+  ipaddr: "10.202.42.84"
+dns:
+  domain: "claro.mx"
+  clusterid: "lab-okd"
+  forwarder1: "10.202.42.84"
+  forwarder2: "10.92.55.39"
+dhcp:
+  router: "10.202.42.1"
+  bcast: "10.202.43.255"
+  netmask: "255.255.254.0"
+  poolstart: "10.202.42.85"
+  poolend: "10.202.42.92"
+  ipid: "10.202.42.0"
+  netmaskid: "255.255.254.0"
+bootstrap:
+  name: "bootstrap"
+  ipaddr: "10.202.42.92"
+  macaddr: "00:50:56:87:23:e4"
+masters:
+  - name: "master0"
+    ipaddr: "110.202.42.85"
+    macaddr: "00:50:56:87:38:5a"
+  - name: "master1"
+    ipaddr: "10.202.42.86"
+    macaddr: "00:50:56:87:a2:c6"
+  - name: "master2"
+    ipaddr: "10.202.42.87"
+    macaddr: "00:50:56:87:44:06" 
+workers:
+  - name: "infra0"
+    ipaddr: "10.202.42.88"
+    macaddr: "00:50:56:87:0b:61"
+  - name: "infra1"
+    ipaddr: "10.202.42.89"
+    macaddr: "00:50:56:87:8a:15"
+  - name: "infra1"
+    ipaddr: "10.202.42.90"
+    macaddr: "00:50:56:87:e6:f4"
+  - name: "infra2"
+    ipaddr: "10.202.42.90"
+    macaddr: "00:50:56:87:e6:f4"
+  - name: "worker0"
+    ipaddr: "10.202.42.91"
+    macaddr: "00:50:56:87:6c:db"
+other:
+  - name: "non-cluster-vm"
+    ipaddr: "192.168.7.31"
+    macaddr: "52:54:00:f4:2e:2e"

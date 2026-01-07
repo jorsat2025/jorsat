@@ -1,0 +1,9 @@
+htpasswd -c -B -b users.htpasswd  admins okd2023!!
+
+oc create secret generic htpass-secret --from-file=htpasswd=users.htpasswd -n openshift-config 
+oc delete create local:admin
+
+htpasswd -bB users.htpasswd admin okd2024!!
+
+oc delete identity local:admin
+oc create secret generic htpass-secret --from-file=htpasswd=users.htpasswd --dry-run=client -o yaml -n openshift-config | oc replace -f -

@@ -1,0 +1,18 @@
+cat << EOF | base64
+server ntpdserver-a.claro.amx iburst
+server ntpdserver-b.claro.amx iburst
+server ntpdserver-c.claro.amx iburst
+server ntpdserver-d.claro.amx iburst
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+allow 10.202.42.0/23
+logdir /var/log/chrony
+EOF
+
+#### codigo base64
+c2VydmVyIG50cGRzZXJ2ZXItYS5jbGFyby5hbXggaWJ1cnN0CnNlcnZlciBudHBkc2VydmVyLWIu
+Y2xhcm8uYW14IGlidXJzdApzZXJ2ZXIgbnRwZHNlcnZlci1jLmNsYXJvLmFteCBpYnVyc3QKc2Vy
+dmVyIG50cGRzZXJ2ZXItZC5jbGFyby5hbXggaWJ1cnN0CmRyaWZ0ZmlsZSAvdmFyL2xpYi9jaHJv
+bnkvZHJpZnQKbWFrZXN0ZXAgMS4wIDMKcnRjc3luYwphbGxvdyAxMC4yMDIuNDIuMC8yMwpsb2dk
+aXIgL3Zhci9sb2cvY2hyb255Cg==
