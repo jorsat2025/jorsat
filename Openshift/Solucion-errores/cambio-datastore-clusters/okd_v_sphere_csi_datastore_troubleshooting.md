@@ -29,12 +29,12 @@ El **vSphere CSI NO usa solo el nombre del datastore**, sino su **Inventory Path
 
 Ejemplo **incorrecto**:
 ```
-/Olleros-IT/datastore/DS-DESA01-123-L003
+/jorsat-IT/datastore/DS-DESA01-123-L003
 ```
 
 Ejemplo **correcto**:
 ```
-/Olleros-IT/datastore/OSDS-DESA01/DS-Cluster-DESA01-HUA/DS-DESA01-123-L003
+/jorsat-IT/datastore/OSDS-DESA01/DS-Cluster-DESA01-HUA/DS-DESA01-123-L003
 ```
 
 El CSI intenta resolver el datastore por jerarquía de carpetas, no por nombre plano.
@@ -44,7 +44,7 @@ El CSI intenta resolver el datastore por jerarquía de carpetas, no por nombre p
 ## Cómo obtener el Inventory Path correcto (PowerCLI)
 
 ```powershell
-$dcName = "Olleros-IT"
+$dcName = "jorsat-IT"
 $dsName = "DS-DESA01-123-L003"
 
 $dsView = Get-View -Id (Get-Datastore -Name $dsName).Id
@@ -61,7 +61,7 @@ while ($parent -and $parent.Name -ne "datastore") {
 
 Salida esperada:
 ```
-/Olleros-IT/datastore/OSDS-DESA01/DS-Cluster-DESA01-HUA/DS-DESA01-123-L003
+/jorsat-IT/datastore/OSDS-DESA01/DS-Cluster-DESA01-HUA/DS-DESA01-123-L003
 ```
 
 ---
@@ -73,7 +73,7 @@ oc patch infrastructure cluster --type='json' -p='[
   {
     "op": "replace",
     "path": "/spec/platformSpec/vsphere/failureDomains/0/topology/datastore",
-    "value": "/Olleros-IT/datastore/OSDS-DESA01/DS-Cluster-DESA01-HUA/DS-DESA01-123-L003"
+    "value": "/jorsat-IT/datastore/OSDS-DESA01/DS-Cluster-DESA01-HUA/DS-DESA01-123-L003"
   }
 ]'
 ```
