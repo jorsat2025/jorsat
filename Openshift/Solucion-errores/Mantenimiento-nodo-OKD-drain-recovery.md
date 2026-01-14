@@ -4,7 +4,7 @@
 Se evita que el scheduler asigne nuevos pods al nodo.
 
 ```bash
-oc adm cordon master2.labokdipi.claro.amx
+oc adm cordon master2.gsve.locals
 ```
 
 ---
@@ -13,7 +13,7 @@ oc adm cordon master2.labokdipi.claro.amx
 Se drenan los workloads existentes del nodo.
 
 ```bash
-oc adm drain master2.labokdipi.claro.amx \
+oc adm drain master2.gsve.locals \
   --force=true --ignore-daemonsets --delete-emptydir-data --timeout=60s
 ```
 
@@ -22,7 +22,7 @@ oc adm drain master2.labokdipi.claro.amx \
 ## 3. Ingresar al nodo en falla
 
 ```bash
-ssh -l core master2.labokdipi.claro.amx
+ssh -l core master2.gsve.locals
 ```
 
 Elevar privilegios:
