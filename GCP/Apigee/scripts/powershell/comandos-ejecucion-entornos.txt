@@ -1,6 +1,0 @@
-cd C:\apigee\bootstrap
-.\apigee-bootstrap-prod-env.ps1 `
-  -ProjectId "<TU_PROJECT_ID>" `
-  -AnalyticsRegion "us-west1" `
-  -Hostnames @("api.tudominio.com") `
-  -DryRun
