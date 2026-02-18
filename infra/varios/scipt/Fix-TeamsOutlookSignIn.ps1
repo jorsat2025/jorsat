@@ -129,7 +129,8 @@ function Reset-WamTokens {
   foreach ($p in $wamPaths) { Remove-PathSafe -Path $p }
 }
 
-function Purge-WindowsCredentials {
+functionRemove-WindowsCredentials
+ {
   if (-not $PurgeWindowsCredentials) {
     Write-Info "PurgeWindowsCredentials NO activado: no se borran credenciales guardadas."
     return
