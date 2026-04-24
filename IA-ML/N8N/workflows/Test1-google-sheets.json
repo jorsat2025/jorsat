@@ -1,0 +1,226 @@
+{
+  "name": "Test1-google-sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hola soy el asistente de Jorsat 👋\nEn que te puedo ayudar hoy?",
+        "availableInChat": true,
+        "agentName": "Jorsat-IA",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ec0709d6-6a3d-497d-89b3-608468785d8a",
+      "name": "When chat message received",
+      "webhookId": "dc9e1b07-4cff-4eab-911b-f92e29b104ce"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "589f3d42-2719-4eb3-8128-9af92a534dc4",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        304,
+        192
+      ],
+      "id": "d5376868-1570-457e-922b-3cbada4b68a9",
+      "name": "Simple Memory",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1DdxlVsrvdZXEvxcBFZVRUDUk4I55x31oPX9LrQEzybs",
+          "mode": "list",
+          "cachedResultName": "Suma-Gastos-2026-test-IA",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DdxlVsrvdZXEvxcBFZVRUDUk4I55x31oPX9LrQEzybs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1847816527,
+          "mode": "list",
+          "cachedResultName": "test1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DdxlVsrvdZXEvxcBFZVRUDUk4I55x31oPX9LrQEzybs/edit#gid=1847816527"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Servicio/Impuesto": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Servicio_Impuesto', ``, 'string') }}",
+            "Importe": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Importe', ``, 'string') }}",
+            "Forma de pago": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Forma_de_pago', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Servicio/Impuesto",
+              "displayName": "Servicio/Impuesto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Importe",
+              "displayName": "Importe",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Forma de pago",
+              "displayName": "Forma de pago",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "cellFormat": "USER_ENTERED",
+          "locationDefine": {
+            "values": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        608,
+        160
+      ],
+      "id": "9d3ea1dc-9928-47a7-afa0-89ad7aabe66d",
+      "name": "Append row in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WLMYRCjno4pSUmmp",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        208
+      ],
+      "id": "86215e78-97bb-46a0-994e-4a8ad543ed2e",
+      "name": "OpenAI Chat Model",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "rnm4aq8b3N7ZxEgf",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        448,
+        320
+      ],
+      "id": "b6646222-8c69-4452-a459-e16bc10f12f9",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0998dd6d-9cb2-4a6f-99e8-239be3034576",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "803b224bbeeaee5b762fa9ad11a396c72679010e6cdb1adbff225ce0c4f75cd5"
+  },
+  "id": "F37mEjuCk5A08bh9",
+  "tags": []
+}
