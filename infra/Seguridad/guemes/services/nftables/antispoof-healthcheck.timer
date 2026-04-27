@@ -10,4 +10,4 @@ Persistent=true
 [Install]
 WantedBy=timers.target
 EOF
-git rm --cached gsv-enterprise.com.ar
+git rm --cached gsv-enterprise.com.ar:
