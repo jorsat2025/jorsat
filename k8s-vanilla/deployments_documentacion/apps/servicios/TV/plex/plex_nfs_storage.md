@@ -25,12 +25,11 @@ Vamos a montar plex dentro de nuestro cluster k8s vanilla. Nuestra infraestructu
 
 Comenzaremos creando el  configuracion de storage persistente de plex. Vamos a necesitar :
 
-- Crear el PV
-- Crear el PVC
+ - Instalar nfs-provisioner segun link https://github.com/jorsat2025/jorsat/blob/main/k8s-vanilla/deployments_documentacion/infra_k8s/provisioners/nfs_provisioner.md
+ - Crear el PVC
 - Aplicar los archvos yaml correspondientes
 
 > Nos situamos en el namespace microservicios ya creado en las guias anteriores con el comando: kubectl config set-context --current --namespace=microservicios
-
 
 
 A continuacion creamos nuestro PVC ( Persistent Volume Claim) generando el archivo  pvc-plex.yaml:
