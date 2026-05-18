@@ -32,22 +32,6 @@ Comenzaremos creando el  configuracion de storage persistente de plex. Vamos a n
 > Nos situamos en el namespace microservicios ya creado en las guias anteriores con el comando: kubectl config set-context --current --namespace=microservicios
 
 
-Creamos  PV (Persistent Volume) generando el archivo pv-plex.yaml:
-
-```yaml
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: plex-pv
-spec:
-  capacity:
-    storage: 20Gi
-  accessModes:
-    - ReadWriteMany
-  nfs:
-    server: 10.10.150.2 # Colacar ip segun corresponda a cada caso.
-    path: /nfs/plex  #Colacar path de nuestro NFS segun corresponda a cada caso.
-  ```
 
 A continuacion creamos nuestro PVC ( Persistent Volume Claim) generando el archivo  pvc-plex.yaml:
 
@@ -56,9 +40,11 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: plex-pvc
+  namespace: microservicios
 spec:
   accessModes:
     - ReadWriteMany
+  storageClassName: nfs-client
   resources:
     requests:
       storage: 20Gi
