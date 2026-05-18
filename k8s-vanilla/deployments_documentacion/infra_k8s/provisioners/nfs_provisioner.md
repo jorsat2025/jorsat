@@ -85,7 +85,7 @@ Luego cambiamos de namespace para trabajar en  nfs-provisioner con el comando:
 
 El siguiente ejemplo corresponde a mi servidor NAS.
 ```bash
-helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner --set nfs.server=10.10.150.2 --set nfs.path=/nfs/kubernetes --set storageClass.onDelete=true
+helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner --set nfs.server=10.10.10.24 --set nfs.path=/mnt/soho_storage/samba/shares/plex --set storageClass.onDelete=true
 ```
 
 
