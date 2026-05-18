@@ -263,6 +263,15 @@ sudo kubeadm join 10.10.100.24:6443 --token 152el8.p0ajifpi371yawc0 \
         --discovery-token-ca-cert-hash sha256:187bb2675840bb108b5293aec3ab9c301996ff31a5b61f4059537ccc5245068f
 ```
 
+ labeleo d elso workers 
+
+```
+kubectl label node worker-01 node-role.kubernetes.io/worker=worker
+
+kubectl label node worker-02 node-role.kubernetes.io/worker=worker
+
+kubectl label node worker-03 node-role.kubernetes.io/worker=worker
+```
 
 ## Pasos finales
 
