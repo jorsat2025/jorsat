@@ -278,7 +278,7 @@ kubectl label node worker-03 node-role.kubernetes.io/worker=worker
 AL final de este doc lo que haremos es copiar el path .kube/config desde cualquier nodo master del cluster hacia el home de nuestra balanceadora HAproxy ya que necesita la config de auth de los api server
 
 ```
-scp admin.conf  jlb@10.10.100.21:/home/jlb/
+scp -r .kube/ jlb@10.10.100.21:/home/jlb/
 
 ```
 
