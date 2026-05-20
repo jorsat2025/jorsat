@@ -1,0 +1,35 @@
+#!/usr/bin/env bpftrace
+
+/*
+ * app_trace.bt - Trace application function calls
+ *
+ * Replace /path/to/your/application with the actual binary path.
+ * Replace function_name with the function you want to trace.
+ * Use 'nm' or 'objdump' to find available function symbols.
+ */
+
+// Trace entry to a specific function in your application
+uprobe:/path/to/your/application:function_name
+{
+    printf("ENTER: %s called by %s (pid=%d)\n",
+           probe, comm, pid);
+
+    // Print function arguments if you know their types
+    // arg0, arg1, etc. contain the function arguments
+    printf("  arg0 = %ld, arg1 = %ld\n", arg0, arg1);
+
+    // Record entry time for latency calculation
+    @entry[tid] = nsecs;
+}
+
+// Trace return from the function
+uretprobe:/path/to/your/application:function_name
+/@entry[tid]/
+{
+    $duration_us = (nsecs - @entry[tid]) / 1000;
+
+    printf("EXIT: %s returned %ld (took %ld us)\n",
+           probe, retval, $duration_us);
+
+    delete(@entry[tid]);
+}
