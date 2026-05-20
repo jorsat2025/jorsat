@@ -1,31 +1,31 @@
 #!/usr/bin/env bpftrace
 
 tracepoint:syscalls:sys_enter_connect
-/comm == "squid"/
+/comm == "squid-6.12"/
 {
   printf("SQUID connect pid=%d fd=%d\n", pid, args->fd);
 }
 
 tracepoint:syscalls:sys_enter_accept4
-/comm == "squid"/
+/comm == "squid-6.12"/
 {
   printf("SQUID accept4 pid=%d fd=%d\n", pid, args->fd);
 }
 
 tracepoint:syscalls:sys_enter_read
-/comm == "squid"/
+/comm == "squid-6.12"/
 {
   printf("SQUID read pid=%d fd=%d count=%d\n", pid, args->fd, args->count);
 }
 
 tracepoint:syscalls:sys_enter_write
-/comm == "squid"/
+/comm == "squid-6.12"/
 {
   printf("SQUID write pid=%d fd=%d count=%d\n", pid, args->fd, args->count);
 }
 
 tracepoint:syscalls:sys_enter_openat
-/comm == "squid"/
+/comm == "squid-6.12"/
 {
   printf("SQUID open pid=%d file=%s\n", pid, str(args->filename));
 }
