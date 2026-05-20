@@ -2,10 +2,9 @@
 # jorsat
 =======
 # repos
-Contiene:
-GCP
-IA-ML
-infra - Seguridad - Guemes
-k8s-vanilla
-Openshift
->>>>>>> 79e3607 (Primer commit inicial)
+Contiene:< br / >
+GCP < br / >
+IA-ML < br / >
+infra - Seguridad - Guemes < br / >
+k8s-vanilla < br / >
+Openshift < br / >
