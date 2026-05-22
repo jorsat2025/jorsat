@@ -21,7 +21,7 @@ En cuanto al Software utilizado el detalle es el siguiente:
 Comenzamos por descargar Squid 6.8 con el siguiente comando:
 
 ```
-wget <https://www.squid-cache.org/Versions/v6/squid-6.8.tar.gz>
+wget https://www.squid-cache.org/Versions/v6/squid-6.8.tar.gz
 ```
 
 Una vez descargado lo descomprimimos en la carpeta destino elegida. En mi caso opte por usar /opt:
