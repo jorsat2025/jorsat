@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: stress-pod-worker2
+  namespace: stress-test
+spec:
+  restartPolicy: Never
+  nodeName: worker2.labokdipi.claro.amx
+  containers:
+  - name: stress
+    image: polinux/stress-ng
+    command: ["/bin/sh","-c"]
+    args:
+      - |
+        stress-ng \
+          --cpu 6 \
+          --vm 3 \
+          --vm-bytes 1G \
+          --io 3 \
+          --timeout 180s \
+          --metrics-brief
+    resources:
+      requests:
+        cpu: "2"
+        memory: "2Gi"
+      limits:
+        cpu: "6"
+        memory: "5Gi"

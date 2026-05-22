@@ -1,0 +1,56 @@
+#!/usr/bin/env bpftrace
+
+/*
+ * suricata_trace.bt
+ * Observabilidad básica de Suricata desde eBPF.
+ * No bloquea, no modifica tráfico, solo traza syscalls.
+ */
+
+tracepoint:syscalls:sys_enter_openat
+/comm ~ "suricata" || comm ~ "Suricata"/
+{
+  printf("SURICATA open pid=%d file=%s\n",
+         pid, str(args->filename));
+}
+
+tracepoint:syscalls:sys_enter_read
+/comm ~ "suricata" || comm ~ "Suricata"/
+{
+  printf("SURICATA read pid=%d fd=%d count=%d\n",
+         pid, args->fd, args->count);
+}
+
+tracepoint:syscalls:sys_enter_write
+/comm ~ "suricata" || comm ~ "Suricata"/
+{
+  printf("SURICATA write pid=%d fd=%d count=%d\n",
+         pid, args->fd, args->count);
+}
+
+tracepoint:syscalls:sys_enter_recvfrom
+/comm ~ "suricata" || comm ~ "Suricata"/
+{
+  printf("SURICATA recvfrom pid=%d fd=%d size=%d\n",
+         pid, args->fd, args->size);
+}
+
+tracepoint:syscalls:sys_enter_sendto
+/comm ~ "suricata" || comm ~ "Suricata"/
+{
+  printf("SURICATA sendto pid=%d fd=%d len=%d\n",
+         pid, args->fd, args->len);
+}
+
+tracepoint:syscalls:sys_enter_connect
+/comm ~ "suricata" || comm ~ "Suricata"/
+{
+  printf("SURICATA connect pid=%d fd=%d\n",
+         pid, args->fd);
+}
+
+tracepoint:syscalls:sys_enter_execve
+/comm ~ "suricata" || comm ~ "Suricata"/
+{
+  printf("SURICATA exec pid=%d file=%s\n",
+         pid, str(args->filename));
+}
