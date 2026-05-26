@@ -1,0 +1,112 @@
+#############################################
+# Squid 6.12 - Guemes (EXP + INTERCEPT)
+# Prefix: /opt/squid-6.12
+#############################################
+
+########## REDES / ACL ##########
+acl localnet src 10.10.10.0/24
+acl localnet src 10.10.100.0/25
+acl localnet src 192.168.100.0/24
+acl localhost src 127.0.0.1/32 ::1
+
+
+always_direct allow localnet
+never_direct deny localnet
+
+
+# Puertos/CONNECT recomendados
+acl SSL_ports   port 443
+acl Safe_ports  port 80
+acl Safe_ports  port 443
+acl Safe_ports  port 1025-65535
+acl CONNECT     method CONNECT
+
+# (opcionales) dominios
+acl github_domains dstdomain .github.com .githubusercontent.com .githubassets.com
+acl bbva_domains   dstdomain .bbva.com.ar .bbvanet.com.ar .google-analytics.com
+
+########## PUERTOS DE ESCUCHA ##########
+# 1) PROXY EXPLÍCITO (para browsers)
+http_port 10.10.10.22:4555 name=exp4555
+
+# Transparente HTTP (nuevo)
+
+#http_port 10.10.10.5:4554 intercept name=int80
+
+# 2) HTTPS INTERCEPT (transparente con NAT + ssl_bump)
+https_port 10.10.10.22:4556 name=int4556 intercept ssl-bump \
+   cert=/opt/squid-6.12-runtime//ssl/cassl/cert-and-key.pem \
+   generate-host-certificates=on \
+   dynamic_cert_mem_cache_size=4MB
+
+# ACL para distinguir el puerto explícito por nombre (mejor que 'port 4555')
+acl to_explicit myportname exp4555
+
+########## SSL BUMP (solo aplica al puerto intercept 4556) ##########
+acl step1 at_step SslBump1
+acl step2 at_step SslBump2
+acl step3 at_step SslBump3
+
+# (opcional) sitios a NO inspeccionar
+# acl splice_sites dstdomain .bbva.com.ar .bbvanet.com.ar .github.com .githubusercontent.com .githubassets.com
+
+ssl_bump peek step1
+# ssl_bump splice splice_sites
+ssl_bump bump step2
+ssl_bump splice step3
+
+# Helper de certificados
+sslcrtd_program /opt/squid-6.12-runtime/libexec/security_file_certgen -s /opt/squid-6.12-runtime/var/lib/ssl_db -M 16MB
+sslcrtd_children 5
+
+########## POLÍTICAS DE ACCESO ##########
+# Bloqueos básicos por RFC
+http_access deny !Safe_ports
+http_access deny CONNECT !SSL_ports
+
+# Permitir primero localhost y tu LAN AL PUERTO EXPLÍCITO
+http_access allow localhost
+http_access allow localnet to_explicit
+
+# (opcionales) reglas por dominio (ya cubiertos por allow localnet)
+# http_access allow localnet github_domains
+# http_access allow localnet bbva_domains
+
+# Denegar el resto
+http_access deny all
+
+########## LOGS / RUTAS ##########
+visible_hostname proxy.local
+
+cache_log /opt/squid-6.12-runtime/var/logs/cache.log
+access_log stdio:/opt/squid-6.12-runtime/var/logs/access.log
+pid_filename /opt/squid-6.12-runtime/var/run/squid.pid
+coredump_dir /opt/squid-6.12-runtime/var/cache
+
+# Ajustá si tu build usa otra carpeta de errores (en-us/es, etc.)
+error_directory /opt/squid-6.12-runtime/share/errors/templates/
+
+
+# evita rotación interna de Squid
+logfile_rotate 0
+
+
+########## CACHE / TUNING ##########
+cache_mem 256 MB
+maximum_object_size_in_memory 512 KB
+# cache_dir rock /opt/squid-6.12/var/cache/rock 20480 max-size=32768  # (opcional; luego 'squid -z')
+
+# Cabecera de estado de caché (RFC 9211)
+reply_header_add Cache-Status Squid
+
+# Menos chivato hacia afuera
+via on
+forwarded_for delete
+
+# Conexiones persistentes
+client_persistent_connections on
+server_persistent_connections on
+pipeline_prefetch 1
+
+# CA del sistema para TLS saliente
+tls_outgoing_options cafile=/etc/ssl/certs/ca-certificates.crt
