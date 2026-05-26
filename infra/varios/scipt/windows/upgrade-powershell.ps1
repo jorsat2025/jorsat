@@ -39,3 +39,4 @@ catch {
     Write-Host "❌ Error durante la actualización: $_" -ForegroundColor Red
     exit 1
 }
+
