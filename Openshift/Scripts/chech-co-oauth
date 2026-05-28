@@ -1,0 +1,15 @@
+{
+  echo "===== FECHA ====="
+  date
+  echo "===== CLUSTER OPERATORS ====="
+  oc get co authentication ingress dns console kube-apiserver
+  echo "===== AUTH PODS ====="
+  oc -n openshift-authentication get pods -o wide
+  echo "===== OAUTH ROUTE ====="
+  oc -n openshift-authentication get route oauth-openshift -o wide
+  echo "===== API VERSION ====="
+  curl -k https://api.labokdipi.claro.amx:6443/version
+  echo
+  echo "===== OAUTH HEALTHZ ====="
+  curl -vk --max-time 10 https://oauth-openshift.apps.labokdipi.claro.amx/healthz
+} 2>&1 | tee /root/auth-co-ok-$(date +%F_%H%M).log
