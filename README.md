@@ -92,7 +92,7 @@ jorsat/
 ├── monitoring/
 └── docs/
 ```
-
+hybrid 
 ---
 
 ## Tecnologías
@@ -109,7 +109,7 @@ jorsat/
 - Loki
 - MLFlow
 - KServe
-- Kubeflow
+- Kubeflow  
 
 ---
 
