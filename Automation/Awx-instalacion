@@ -1,0 +1,94 @@
+# 🚀 Guía Rápida: Instalación de AWX y Solución de Errores
+
+Esta guía contiene el paso a paso real que ejecutamos en tu servidor, con los comandos limpios y las soluciones a los errores que fuimos arreglando para dejar todo el clúster en verde.
+
+---
+
+## 1. Solución al Instalador de Discos (Ubuntu Server)
+Si el botón **"Hecho" (Done)** aparece deshabilitado y salta el cartel naranja *"To continue you need to: Select a boot disk"*:
+1. Bajá con las flechas del teclado hasta la sección **`DISPOSITIVOS UTILIZADOS`**.
+2. Parate sobre tu disco duro físico de **60 GB**.
+3. Presioná `Enter` o `Espacio` y seleccioná la opción **"Use as Boot Device"** (Usar como dispositivo de arranque). El cartel desaparecerá y te dejará continuar.
+
+---
+
+## 2. Instalación de Dependencias y Kubernetes (K3s)
+Ejecutá estos comandos en orden como usuario `root`:
+
+```bash
+# Paso 1: Actualizar el sistema e instalar herramientas básicas
+apt update && apt upgrade -y
+apt install -y curl git jq
+
+# Paso 2: Instalar Kubernetes K3s (con permisos de lectura para kubeconfig)
+curl -sfL [https://get.k3s.io](https://get.k3s.io) | sh -s - --write-kubeconfig-mode 644
+
+# Paso 3: Instalar Kustomize (el motor para desplegar AWX)
+curl -s "[https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh](https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh)" | bash
+mv kustomize /usr/local/bin/
+
+# Paso 4: Clonar el repositorio oficial y cambiarse a la versión estable 2.19.1
+git clone [https://github.com/ansible/awx-operator.git](https://github.com/ansible/awx-operator.git)
+cd awx-operator
+git checkout 2.19.1
+
+# Paso 5: Crear el espacio de nombres (namespace) e instalar el operador
+export NAMESPACE=awx
+kubectl create namespace $NAMESPACE
+make deploy
+
+cd ..
+mkdir mi-awx-server && cd mi-awx-server
+
+4. Configuración de la Instancia y Solución de Errores
+Salimos de la carpeta del operador y creamos tu propia carpeta de trabajo:
+
+Bash
+cd ..
+mkdir mi-awx-server && cd mi-awx-server
+(Aquí adentro se crearon los archivos kustomization.yaml y awx.yaml correspondientes).
+
+❌ Error 1: no matches for kind "AWX" in version "awx.ansible.com/v1beta1"
+Por qué pasa: Kubernetes todavía está procesando las definiciones nuevas en su cerebro.
+
+Solución: No hay que hacer nada. Esperás 10-15 segundos y volvés a ejecutar el comando de instalación.
+
+❌ Error 2: ImagePullBackOff en kube-rbac-proxy (Estado 1/2)
+Por qué pasa: Google eliminó de sus servidores la imagen vieja kube-rbac-proxy:v0.15.0.
+
+Solución definitiva (Cambiar la imagen rota):
+
+Entrá a la carpeta de configuración del manager:
+
+Bash
+cd /home/jlb/awx-operator/config/manager
+Abrí el archivo manager.yaml con el editor de texto:
+
+Bash
+nano manager.yaml
+Buscá la sección del contenedor defectuoso (name: kube-rbac-proxy) y reemplazá su línea image: por una oficial de RedHat que sí funciona:
+
+YAML
+image: [registry.access.redhat.com/ubi9/ubi-minimal:latest](https://registry.access.redhat.com/ubi9/ubi-minimal:latest)
+Guardá los cambios presionando Ctrl + O, dale Enter y salí con Ctrl + X.
+
+5. Aplicación Final y Datos de Acceso
+Volvé a tu carpeta de trabajo y aplicá el despliegue definitivo con la corrección:
+
+Bash
+cd /home/jlb/mi-awx-server
+kustomize build . | kubectl apply -f -
+Monitorear que todo pase a verde:
+Bash
+kubectl get pods -n awx -w
+(Verás que el operador pasa a 2/2 Running, las migraciones dicen Completed y la web queda activa).
+
+🔐 Credenciales y URL de Entrada:
+🌐 Dirección Web: http://10.10.100.35:32144
+
+👤 Usuario: admin
+
+🔑 Contraseña: ondRMbl0Jq8KAN77FsjX4Jpxu9AU1sf6
+
+💡 Nota: Recordá que si alguna vez cambia la contraseña o querés consultarla directo en el sistema, podés recuperarla tirando este comando:
+kubectl get secret awx-produccion-admin-password -n awx -o jsonpath="{.data.password}" | base64 --decode; echo
