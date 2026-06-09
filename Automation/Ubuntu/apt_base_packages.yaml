@@ -1,0 +1,26 @@
+---
+
+- name: Base package installation (Debian / Ubuntu)
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - dirmngr
+        - tcpdump
+        - nmap
+        - mc
+        - plocate
+        - dnsutils
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg2
+        - software-properties-common
+        - vim

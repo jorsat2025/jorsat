@@ -1,0 +1,14 @@
+- name: Actualizar paquetes en Ubuntu
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+
+    - name: Run the equivalent of "apt-get update" as a separate step
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Upgrade the OS (apt-get dist-upgrade)
+      ansible.builtin.apt:
+          upgrade: dist
