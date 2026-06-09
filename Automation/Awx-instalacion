@@ -1,41 +1,56 @@
 # 🚀 Guía Rápida: Instalación de AWX y Solución de Errores
 
-Esta guía contiene el paso a paso real que ejecutamos en tu servidor, con los comandos limpios y las soluciones a los errores que fuimos arreglando para dejar todo el clúster en verde.
+Esta guía contiene el paso a paso real que ejecutamos en el servidor, con los comandos limpios y las soluciones a los errores más comunes para dejar el clúster funcionando correctamente.
 
 ---
 
-## 1. Solución al Instalador de Discos (Ubuntu Server)
+# 1. Solución al Instalador de Discos (Ubuntu Server)
 
-Si el botón **"Hecho" (Done)** aparece deshabilitado y salta el cartel naranja *"To continue you need to: Select a boot disk"*:
+Si el botón **"Hecho" (Done)** aparece deshabilitado y muestra el mensaje:
 
-1. Bajá con las flechas del teclado hasta la sección **`DISPOSITIVOS UTILIZADOS`**.
-2. Parate sobre tu disco duro físico de **60 GB**.
-3. Presioná `Enter` o `Espacio` y seleccioná la opción **"Use as Boot Device"** (Usar como dispositivo de arranque). El cartel desaparecerá y te dejará continuar.
+> **"To continue you need to: Select a boot disk"**
+
+seguí estos pasos:
+
+1. Bajá con las flechas del teclado hasta la sección **DISPOSITIVOS UTILIZADOS**.
+2. Seleccioná el disco físico de **60 GB**.
+3. Presioná **Enter** o **Espacio**.
+4. Elegí la opción **Use as Boot Device**.
+
+El mensaje desaparecerá y podrás continuar con la instalación.
 
 ---
 
-## 2. Instalación de Dependencias y Kubernetes (K3s)
+# 2. Instalación de Dependencias y Kubernetes (K3s)
 
-Ejecutá estos comandos en orden como usuario `root`:
+Ejecutar como **root**:
 
 ```bash
-# Paso 1: Actualizar el sistema e instalar herramientas básicas
+# Actualizar el sistema
 apt update && apt upgrade -y
+
+# Instalar herramientas básicas
 apt install -y curl git jq
 
-# Paso 2: Instalar Kubernetes K3s (con permisos de lectura para kubeconfig)
-curl -sfL [https://get.k3s.io](https://get.k3s.io) | sh -s - --write-kubeconfig-mode 644
+# Instalar K3s
+curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644
 
-# Paso 3: Instalar Kustomize (el motor para desplegar AWX)
-curl -s "[https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh](https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh)" | bash
+# Instalar Kustomize
+curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash
 mv kustomize /usr/local/bin/
 
-# Paso 4: Clonar el repositorio oficial y cambiarse a la versión estable 2.19.1
-git clone [https://github.com/ansible/awx-operator.git](https://github.com/ansible/awx-operator.git)
+# Clonar el repositorio oficial del operador AWX
+git clone https://github.com/ansible/awx-operator.git
+
 cd awx-operator
+
+# Cambiar a la versión estable
 git checkout 2.19.1
 
-# Paso 5: Crear el espacio de nombres (namespace) e instalar el operador
+# Crear el namespace
 export NAMESPACE=awx
 kubectl create namespace $NAMESPACE
+
+# Instalar el operador
 make deploy
+```
