@@ -1,0 +1,7 @@
+pywinrm
+requests
+netaddr
+jmespath
+openshift
+kubernetes
+psycopg2-binary
