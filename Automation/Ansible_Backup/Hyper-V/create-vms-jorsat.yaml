@@ -1,0 +1,51 @@
+---
+- name: Crear VM Base desde ISO por SSH Nativo
+  hosts: all
+  gather_facts: false
+  vars:
+    vm_name: "test-gold1"
+    ruta_vms: "E:\SD-VMS\\Hyper-V"
+    switch_virtual: "net-vms"
+    # ⚠️ REVISÁ ACÁ: Poné la ruta física real donde tenés tu ISO de Ubuntu
+    ruta_iso: "E:\yperV-Templates\ubuntu-24.04-live-server-amd64.iso"
+
+  tasks:
+    - name: 1. Crear carpeta para la VM si no existe
+      ansible.windows.win_command:
+        cmd: |
+          powershell.exe -Command "New-Item -ItemType Directory -Path '{{ ruta_vms }}\{{ vm_name }}' -Force"
+
+    - name: 2. Crear disco rígido dinámico de 20GB en el disco E
+      ansible.windows.win_command:
+        cmd: |
+          powershell.exe -Command "New-VHD -Path '{{ ruta_vms }}\{{ vm_name }}\{{ vm_name }}.vhdx' -SizeBytes 20GB -Dynamic"
+
+    - name: 3. Crear la VM de Generación 2 con 4GB de RAM y su disco
+      ansible.windows.win_command:
+        cmd: |
+          powershell.exe -Command "New-VM -Name '{{ vm_name }}' -Generation 2 -MemoryStartupBytes 4GB -SwitchName '{{ switch_virtual }}' -VHDPath '{{ ruta_vms }}\{{ vm_name }}\{{ vm_name }}.vhdx'"
+
+    - name: 4. Configurar Procesador (Asignar 2 vCPUs para que vaya más rápido)
+      ansible.windows.win_command:
+        cmd: |
+          powershell.exe -Command "Set-VMProcessor -VMName '{{ vm_name }}' -Count 2"
+
+    - name: 5. Agregar la lectora de DVD con la ISO de Ubuntu
+      ansible.windows.win_command:
+        cmd: |
+          powershell.exe -Command "Add-VMDvdDrive -VMName '{{ vm_name }}' -Path '{{ ruta_iso }}'"
+
+    - name: 6. PARCHE LINUX Y APAGADO DE SECURE BOOT (Evita el pantallazo rojo)
+      ansible.windows.win_command:
+        cmd: |
+          powershell.exe -Command "Set-VMFirmware -VMName '{{ vm_name }}' -EnableSecureBoot Off"
+
+    - name: 7. Forzar orden de booteo (Primero el DVD para instalar, después el Disco)
+      ansible.windows.win_command:
+        cmd: |
+          powershell.exe -Command "$vm = Get-VM -Name '{{ vm_name }}'; $dvd = Get-VMDvdDrive -VM $vm; $hardDrive = Get-VMHardDiskDrive -VM $vm; Set-VMFirmware -VM $vm -FirstBootDevice $dvd"
+
+    - name: 8. Encender la nueva máquina para iniciar la instalación
+      ansible.windows.win_command:
+        cmd: |
+          powershell.exe -Command "Start-VM -Name '{{ vm_name }}'"

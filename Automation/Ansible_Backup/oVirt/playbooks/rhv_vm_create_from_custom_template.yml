@@ -1,0 +1,128 @@
+---
+##### RVH or oVirt -
+#####
+##### Version 0.01
+##### Develope by Gaston Descalzo | gdescalzo@gmail.com
+#####
+##### The propouse of this script is the creation of a virtual machine almost in unatended way.
+##### VM Creation from Custom Template, with 3 NICs interfaces and list the templates Availables
+##### And seting up the NIC type.
+#####
+
+- name: Create VM on RHV or oVirt Platform from Custom Template and list the templates availables
+  hosts: localhost
+  connection: local
+  gather_facts: True
+
+  ## Vars Files (default configuration for host connection)
+  vars_files:
+   - ../vars/rhv_vars.yml
+   - ../vars/password.yml
+
+  ## Pre task hypervisor login
+  pre_tasks:
+    - name: Login to oVirt
+      tags: always
+      ovirt_auth:
+        hostname: "{{ rhvm_fqdn }}"
+        username: "{{ rhvm_user }}"
+        password: "{{ rhvm_password }}"
+        ca_file: "{{ rhvm_cafile | default(omit) }}"
+        insecure: "{{ rhvm_insecure | default(true) }}"
+
+  ## Vars Enviroment hypervisor host
+  vars:
+   datacenter: GSV-Enterprise
+   cluster: GSV-Cluster
+   vm_memory: "{{ vms_memory }}GiB"
+   vm_name: "{{ vm_names }}.gsv.locals"
+   vm_template: "{{ lookup('file', '../vars/template_list.yml') }}"
+   nic_old1: eth0
+   nic_old2: eth1
+   nic_old3: eth2
+   nic_new1: ens3
+   nic_new2: ens4
+   nic_new3: ens5
+
+  ## Survey Menu
+  vars_prompt:
+    # Define the VM name
+    - name: vm_names
+      prompt: What is your VM Name?
+      private: no
+    # Define the VM memory
+    - name: vms_memory
+      prompt: What is your VM Memory on GiB?
+      private: no
+      default: 8
+    # Define the VM Template
+    - name: vm_templates
+      prompt: |
+        Choice your template ?
+        {{ vm_template }}
+      private: no
+    # Set the VM IPs
+    - name: vm_nic1_ip
+      prompt: Choice the IP for the NIC1 (VLAN 3)?
+      private: no
+    - name: vm_nic2_ip
+      prompt: Choice the IP for the NIC2 (VLAN 30)?
+      private: no
+    - name: vm_nic3_ip
+      prompt: Choice the IP for the NIC3 (VLAN 36)?
+      private: no
+
+  ## Begin VM Creation Tasks
+  tasks:
+
+    #- name: Define Nic Type
+    - set_fact:
+        vm_nic1: "{{ nic_old1 if (vm_templates == 'ci-rhev7.9.template') else nic_new1}}"
+    - set_fact:
+        vm_nic2: "{{ nic_old2 if (vm_templates == 'ci-rhev7.9.template') else nic_new2}}"
+    - set_fact:
+        vm_nic3: "{{ nic_old3 if (vm_templates == 'ci-rhev7.9.template') else nic_new3}}"
+
+    ## VM Creation
+    - name: Creating the VM
+      ovirt.ovirt.ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          name: "{{ vm_name }}"
+          template: "{{ vm_templates }}"
+          cluster: "{{ cluster }}"
+          state: running
+          nics:
+            - name: nic1
+              profile_name: ovirtmgmt
+          cloud_init:
+            dns_servers: 10.166.3.1
+            host_name: "{{ vm_names }}.gsv.locals"
+            custom_script: |
+              runcmd:
+                - hostnamectl set-hostname {{ vm_names }}.gsv.locals
+          cloud_init_nics:
+            - nic_name: "{{ vm_nic1 }}"
+              nic_boot_protocol: static
+              nic_ip_address: "{{ vm_nic1_ip }}"
+              nic_netmask: 255.255.255.0
+              nic_gateway: 10.166.3.1
+            - nic_name: "{{ vm_nic2 }}"
+              nic_boot_protocol: static
+              nic_ip_address: "{{ vm_nic2_ip }}"
+              nic_netmask: 255.255.255.0
+              nic_gateway: 10.166.30.1
+            - nic_name: "{{ vm_nic3 }}"
+              nic_boot_protocol: static
+              nic_ip_address: "{{ vm_nic3_ip }}"
+              nic_netmask: 255.255.255.0
+              nic_gateway: 10.166.36.1
+
+  ## Post Task
+  post_tasks:
+
+  ## Closing Connection
+  - name: Logout from Rhvm or oVirt
+    tags: always
+    ovirt_auth:
+     state: absent
+     ovirt_auth: "{{ ovirt_auth }}"

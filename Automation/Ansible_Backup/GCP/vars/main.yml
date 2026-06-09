@@ -1,0 +1,6 @@
+instance_name: centos-7
+machine_type: e2-micro
+zone: us-central1-a
+source_image: projects/centos-cloud/global/images/family/centos-7
+service_account_file: ../vars/service-account.json
+project_id: gsventerprise

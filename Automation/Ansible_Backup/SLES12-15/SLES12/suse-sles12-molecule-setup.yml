@@ -1,0 +1,10 @@
+- name: Setup molecule in a virtual environment
+  shell:
+    - mkdir roles
+    - cd roles
+    - python3 -m venv molecule-venv
+    - source molecule-venv/bin/activate
+    - pip install "molecule[lint,docker]"
+    - pip install ansible
+    ## https://documentation.suse.com/sles/12-SP4/single-html/SLES-dockerquick/index.html
+    ## https://documentation.suse.com/sles/12-SP4/html/SLES-all/docker-building-images.html#Building-Pre-build-Images

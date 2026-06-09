@@ -1,0 +1,164 @@
+---
+##### RVH or oVirt -
+#####
+##### Version 0.01
+##### Develope by Gaston Descalzo | gdescalzo@gmail.com
+#####
+##### The propouse of this script is the creation of a virtual machine almost in unatended way.
+##### VM Creation from Blank Template, with 3 NICs interfaces and mounting a CD-Rom ISO for
+##### the first boot, and installation fthe operationg system.
+#####
+#####
+
+- name: Create VM on RHV or oVirt Platform from Blank Template and atach ISO File
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  ## Vars Files (default configuration for host connection)
+  vars_files:
+   - ../vars/rhv_vars.yml
+   - ../vars/password.yml
+   - ../vars/rhv_vars_ls.yml
+
+  pre_tasks:
+    ## Pre task hypervisor login
+    - name: Login to oVirt
+      tags: always
+      ovirt_auth:
+        hostname: "{{ rhvm_fqdn }}"
+        username: "{{ rhvm_user }}"
+        password: "{{ rhvm_password }}"
+        ca_file: "{{ rhvm_cafile | default(omit) }}"
+        insecure: "{{ rhvm_insecure | default(true) }}"
+
+    ## Pre create Listo of ISOs Availables
+    - name: List ISOs Files on the NFS Data Domain
+      shell: ssh -l "{{ skaka_user }}" "{{ shaka_fqdn }}" ls -1 "{{ skaka_path }}" > ../vars/isos.yml
+
+  ## Vars Enviroment hypervisor host
+  vars:
+   datacenter: GSV-Enterprise
+   cluster: GSV-Cluster
+   vm_memory: "{{ vms_memory }}GiB"
+   vm_name: "{{ vm_names }}.gsv.locals"
+   dir_out: "{{ lookup('file', '../vars/isos.yml') }}"
+
+  ## Survey Menu
+  vars_prompt:
+    # Define the VM name
+    - name: vm_names
+      prompt: What is your VM Name?
+      private: no
+    # Define the VM memory
+    - name: vms_memory
+      prompt: What is your VM Memory on GiB?
+      private: no
+      default: 8
+    # Define the VM main disk size
+    - name: vm_disk_size
+      prompt: What is your VM Disk Size on GiB?
+      private: no
+      default: 80
+    # Choice witch storage domain you will use for the new disk
+    - name: vm_disk_storagedomain
+      prompt: |
+        Choice your Storage Domain - default:?
+        shaka1_1
+        hosted_storage
+      default: shaka1_1
+      private: no
+
+    # Define the VM ISOs
+    - name: vm_isos
+      prompt: |
+        What is your ISO File?
+        {{ dir_out }}
+      private: no
+
+
+  ## Begin VM Creation Tasks
+  tasks:
+
+    ## Checking the default Value choiced for storage domain
+    #- debug: msg="{{ vm_disk_storagedomain }}"
+
+    ## Disk Creation
+    - name: Creating the Disk for the VM
+      ovirt.ovirt.ovirt_disk:
+        auth: "{{ ovirt_auth }}"
+        name: "{{ vm_names }}.gsv.locals"
+        size: "{{ vm_disk_size }}GiB"
+        format: cow
+        interface: virtio
+        storage_domain: "{{ vm_disk_storagedomain }}"
+
+    ## VM Creation
+    - name: Creating the VM
+      ovirt.ovirt.ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          state: present
+          cluster: "{{ cluster }}"
+          name: "{{ vm_name }}"
+          memory: "{{ vm_memory }}"
+          high_availability: false
+          cpu_cores: 1
+          cpu_sockets: 2
+          cpu_shares: 1024
+          type: server
+          #operating_system: rhel_7x64
+          disks:
+            - name: "{{ vm_names }}.gsv.locals"
+              bootable: True
+
+    ## Adding NICs post VM Creation
+    - name: Adding NIC1 to VM and assigning network
+      ovirt.ovirt.ovirt_nic:
+          auth: "{{ ovirt_auth }}"
+          state: present
+          vm: "{{ vm_names }}.gsv.locals"
+          name: nic1
+          interface: virtio
+          profile: ovirtmgmt
+          network: ovirtmgmt
+
+    - name: Adding NIC2 to VM and assigning network
+      ovirt.ovirt.ovirt_nic:
+          auth: "{{ ovirt_auth }}"
+          state: present
+          vm: "{{ vm_names }}.gsv.locals"
+          name: nic2
+          interface: virtio
+          profile: ovirtservice
+          network: ovirtservice
+
+    - name: Adding NIC3 to VM and assigning network
+      ovirt.ovirt.ovirt_nic:
+          auth: "{{ ovirt_auth }}"
+          state: present
+          vm: "{{ vm_names }}.gsv.locals"
+          name: nic3
+          interface: virtio
+          profile: ovirtstorage
+          network: ovirtstorage
+
+    ## Powering ON VM and mounting ISO File
+    - name: Powering ON the VM
+      ovirt.ovirt.ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          state: running
+          name: "{{ vm_names }}.gsv.locals"
+          cd_iso: "{{ vm_isos }}"
+          boot_devices:
+              - cdrom
+              - hd
+
+  ## Post Task
+  post_tasks:
+
+  ## Closing Connection
+  - name: Logout from Rhvm or oVirt
+    tags: always
+    ovirt_auth:
+     state: absent
+     ovirt_auth: "{{ ovirt_auth }}"

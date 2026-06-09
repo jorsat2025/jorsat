@@ -1,0 +1,12 @@
+---
+- name: Listar VMs de Hyper-V por SSH
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Probando comando basico de PowerShell
+      ansible.windows.win_command: powershell.exe -Command "Get-VM | Select-Object Name, State | Out-String"
+      register: lista_vms
+
+    - name: Mostrar el resultado
+      debug:
+        msg: "{{ lista_vms.stdout }}"

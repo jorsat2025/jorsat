@@ -1,0 +1,52 @@
+### SLES15 SP2
+###
+### Install docker on SLES15 SP2
+###
+###
+
+
+---
+
+- name: SLES15 Registration
+  hosts: all
+
+  tasks:
+
+    ## Install Docker
+    - name: Installing Docker Package 
+      zypper:
+        name:
+          - docker
+        state: latest
+      environment:
+        http_proxy: http://10.214.130.110:80
+        https_proxy: http://10.214.130.110:80
+        no_proxy: localhost,127.0.0.1,ardp.local,intranet.local
+  
+    ## Starting Docker Service
+    - service: name=docker state=started enabled=yes
+
+    ## Install Docker-compose
+    - name: Installing Docker-compose dependence
+      zypper:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - libopenssl-devel
+        - libffi-devel
+        - gcc
+        - make
+        - python3-devel
+        - python3-pip
+        - gawk
+        - lvm2
+
+    ## Installation of Docker-py
+    - name: Install python library for Docker
+      pip:
+       name: docker-py
+
+    ## Installation of Docker
+    - name: Docker Compose Installation
+      pip:
+       name: docker-compose

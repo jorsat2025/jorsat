@@ -1,0 +1,15 @@
+---
+- name: Crear Maquina Virtual por comando nativo
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Ejecutar New-VM en el Hyper-V
+      ansible.windows.win_command: powershell.exe -Command "New-VM -Name 'VM-Automatizada-AWX' -Generation 2 -MemoryStartupBytes 2GB -SwitchName 'Default Switch'"
+      register: resultado_creacion
+
+    - name: Mostrar si se creo bien
+      debug:
+        msg: "{{ resultado_creacion.stdout }}"
+
+    - name: Encender la nueva VM
+      ansible.windows.win_command: powershell.exe -Command "Start-VM -Name 'VM-Automatizada-AWX'"

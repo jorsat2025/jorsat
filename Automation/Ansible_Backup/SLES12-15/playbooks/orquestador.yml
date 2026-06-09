@@ -1,0 +1,21 @@
+---
+#- hosts: some_host
+- hosts: devMTZ
+#  vars_files:
+#    - ../vars/
+
+  tasks:
+    ## SLES12 SPX
+    #- include_tasks: suse-sles12-ansible-install.yml
+    #- include_tasks: suse-sles12-docker-install.yml              # Instala docker (sin docker-compose)
+    #- include_tasks: suse-sles12-docker-compose-install.yml      # Instala docker-compose
+    #- include_tasks: suse-sles12-mysql-install.yml
+    #- include_tasks: suse-sles12-mysql-config.yml
+    #- include_tasks: suse-sles12-so-proxy.yml
+    #- include_tasks: suse-sles12-so-register.yml
+    #- include_tasks: suse-sles12-so-updates.yml
+
+    #SLES15 SPX (estan en el directorio SLES15, los movi)
+    #- include_tasks: suse-sles15-docker-install.yml
+    #- include_tasks: suse-sles15-so-register.yml
+    #- include_tasks: suse-sles15-so-upgrade.yml

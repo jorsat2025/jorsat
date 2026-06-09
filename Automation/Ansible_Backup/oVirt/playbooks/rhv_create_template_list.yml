@@ -1,0 +1,58 @@
+---
+- name: List Templates on oVirt and RHEV
+  hosts: localhost
+  connection: locals
+  gather_facts: false
+
+  vars_files:
+   - ../vars/rhv_vars.yml
+   - ../vars/password.yml
+
+  ## Vars Enviroment hypervisor host
+  vars:
+   datacenter: GSV-Enterprise
+   cluster: GSV-Cluster
+   temp: []
+
+  ## Pre task hypervisor login
+  pre_tasks:
+    - name: Login to oVirt
+      tags: always
+      ovirt_auth:
+        hostname: "{{ rhvm_fqdn }}"
+        username: "{{ rhvm_user }}"
+        password: "{{ rhvm_password }}"
+        ca_file: "{{ rhvm_cafile | default(omit) }}"
+        insecure: "{{ rhvm_insecure | default(true) }}"
+
+  ## Begin the list tasks
+  tasks:
+
+    - name: Get all Storage Template Info
+      ovirt.ovirt.ovirt_storage_template_info:
+        auth: "{{ ovirt_auth }}"
+        nested_attributes:
+          - name
+        storage_domain: shaka1_1
+      register: result
+
+    - name: "Build list of VMs except for HostedEngine"
+      set_fact:
+        temp: "{{ temp }} + ['{{ item.name }}'] "
+      when: "item.name != 'HostedEngine'"
+      with_items:
+        "{{ result.ovirt_storage_templates}}"
+
+    - debug:
+        msg: "Templates Availables: {{ temp | to_nice_yaml(indent=3) }}"
+
+    - name: Create an Template List File
+      copy:
+        content: |
+          {% for host in temp %}
+          {{ host }}
+          {% endfor %}
+        dest: ../vars/template_list.yml
+
+#    - ansible.builtin.debug:
+#       msg: "{{ result.ovirt_storage_templates | map(attribute='name') }}"

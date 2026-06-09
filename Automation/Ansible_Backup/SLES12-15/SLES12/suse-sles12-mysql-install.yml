@@ -1,0 +1,52 @@
+---
+
+## Enable this if you have low space under /usr
+  - name: Extend the logical volume /usr
+    community.general.lvol:
+      vg: rootvg
+      lv: usr
+      size: +1G
+      resizefs: yes
+
+  - name: Adding SLES Dependencies
+    copy:
+      dest: "/etc/zypp/repos.d/devel:gcc.repo"
+      content: |
+        [devel_gcc]
+        name=GNU Compiler Collection container (SLE-12)
+        type=rpm-md
+        baseurl=https://download.opensuse.org/repositories/devel:/gcc/SLE-12/
+        gpgcheck=1
+        gpgkey=https://download.opensuse.org/repositories/devel:/gcc/SLE-12/repodata/repomd.xml.key
+        enabled=1
+
+  - name: Install Repo MySQL Community Server
+    community.general.zypper:
+      name: "https://dev.mysql.com/get/mysql80-community-release-sles12-3.noarch.rpm"
+      state: present
+      disable_recommends: yes
+      force_resolution: yes
+      disable_gpg_check: yes
+
+  - name: Accepting the GPG Keys
+    shell: zypper --gpg-auto-import-keys refresh ## Revisar en otro host
+
+  - name: Refresh all repos  ## Revisar en otro host
+    zypper_repository:
+      repo: '*'
+      runrefresh: yes
+      auto_import_keys: yes
+      overwrite_multiple: yes
+
+  - name: Install MySQL Server
+    community.general.zypper:
+      name: mysql-community-server
+      state: present
+
+   ## Starting MySQL Service
+  - name: Enabling and Starting MySQL Service
+    service: name=mysql state=started enabled=yes
+
+
+
+

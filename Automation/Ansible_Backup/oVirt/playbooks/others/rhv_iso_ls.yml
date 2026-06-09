@@ -1,0 +1,32 @@
+---
+- name: Create Inventory File from a Query
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  ## Vars Files (default configuration for host connection)
+  vars_files:
+    - ../../vars/rhv_vars_ls.yml
+  #  - ../../vars/isos.yml
+
+  ## Pre task hypervisor login
+  pre_tasks:
+
+    - name: List ISOs Files on the NFS Data Domain
+      shell: ssh -l "{{ skaka_user }}" "{{ shaka_fqdn }}" ls -1 "{{ skaka_path }}" > ../vars/isos.yml
+
+  vars:
+    dir_out: "{{ lookup('file', '../vars/isos.yml') }}"
+
+## Survey Menu
+  vars_prompt:
+    # Define the VM ISOs
+    - name: vm_isos
+      prompt: |
+        What is your ISO File?
+        {{ dir_out }}
+      private: no
+      #with_items: "{{ dir_out.stdout_lines }}"
+      #private: no
+
+    #- debug:  msg="{{ dir_out.stdout_lines }}"

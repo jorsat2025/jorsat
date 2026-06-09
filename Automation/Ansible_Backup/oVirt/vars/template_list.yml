@@ -1,0 +1,5 @@
+ci-rhel8.4.template
+ci-deb10.9.template
+ci-rhev7.9.template
+ci-centos8.4.template
+ci-centos7.9.template

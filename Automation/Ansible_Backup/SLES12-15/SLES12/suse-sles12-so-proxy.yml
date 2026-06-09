@@ -1,0 +1,15 @@
+---
+
+#- name: SLES1x Proxy Configuration
+#  hosts: all
+
+#  tasks:
+
+   - name: Copiar y activar proxy
+     copy:
+       src: /root/ansible/playbooks/proxy
+       dest: /etc/sysconfig/proxy
+
+   - name: Aplicar Proxy
+     meta: reset_connection
+

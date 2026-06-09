@@ -1,0 +1,17 @@
+---
+
+  ## Install Docker
+  - name: Installing Docker Package 
+    zypper:
+      name:
+        - docker
+      state: latest
+    environment:
+      http_proxy: http://10.214.130.110:80
+      https_proxy: http://10.214.130.110:80
+      no_proxy: localhost,127.0.0.1,ardp.local,intranet.local
+  
+  ## Starting Docker Service
+  - name: Enabling and Starting Docker Service
+    service: name=docker state=started enabled=yes
+

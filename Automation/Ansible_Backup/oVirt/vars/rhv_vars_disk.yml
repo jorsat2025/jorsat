@@ -1,0 +1,5 @@
+---
+
+vm_storage_domain1: 
+ storage1: hosted_storage
+ storage2: shaka1_1

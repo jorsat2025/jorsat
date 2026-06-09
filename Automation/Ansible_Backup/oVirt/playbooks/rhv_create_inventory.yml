@@ -1,0 +1,56 @@
+---
+- name: Create Inventory File from a Query
+  hosts: localhost
+  connection: local
+
+  ## Vars Files (default configuration for host connection)
+  vars_files:
+   - ../vars/rhv_vars.yml
+   - ../vars/password.yml
+
+  vars:
+    vms: []
+
+  ## Pre task hypervisor login
+  pre_tasks:
+    - name: Login to oVirt
+      tags: always
+      ovirt_auth:
+        hostname: "{{ rhvm_fqdn }}"
+        username: "{{ rhvm_user }}"
+        password: "{{ rhvm_password }}"
+        ca_file: "{{ rhvm_cafile | default(omit) }}"
+        insecure: "{{ rhvm_insecure | default(true) }}"
+
+  tasks:
+
+    - name: Get all VM Info
+      ovirt_vm_info:
+        auth: "{{ ovirt_auth }}"
+        all_content: true
+        fetch_nested: true
+        nested_attributes:
+          - tags
+          - name
+      register: vm_result
+
+    - name: "Build list of VMs except for HostedEngine"
+      set_fact:
+        vms: "{{ vms }} + ['{{ item.name }}'] "
+      when: "item.name != 'HostedEngine'"
+      with_items:
+        "{{ vm_result.ovirt_vms }}"
+
+    - debug:
+        msg: "VM host list: {{ vms | to_nice_yaml(indent=3) }}"
+
+    # At this point {{ vms }} looks like this:
+    # [ 'host1', 'host2', 'host3' ]
+    - name: create an inventory file
+      copy:
+        content: |
+          [ultron]
+          {% for host in vms %}
+          #{{ host }}
+          {% endfor %}
+        dest: ../inventory

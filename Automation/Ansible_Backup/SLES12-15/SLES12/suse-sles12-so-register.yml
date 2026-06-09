@@ -1,0 +1,13 @@
+---
+
+#- name: SLES12 Registration, Update Repo
+#  hosts: all
+#  tasks:
+
+    - name: Registrar Suse
+      command: "{{ item }}"
+      with_items:
+        - /usr/sbin/SUSEConnect --cleanup
+        - /usr/sbin/SUSEConnect --regcode xxxxxxxxxxxx
+        - /usr/sbin/SUSEConnect -p sle-module-containers/12/x86_64 -r ''
+

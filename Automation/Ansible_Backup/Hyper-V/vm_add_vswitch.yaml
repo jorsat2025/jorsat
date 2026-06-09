@@ -1,0 +1,19 @@
+---
+- name: Add network interface
+  hosts: hyperv
+  gather_facts: true
+
+  vars:
+    vm_name: "base-image-ubuntu2404"
+
+  tasks:
+    - name: Add network adapters (QA and PROD)
+      microsoft.hyperv.hv_network_adapter:
+        vm_name: "{{ vm_name }}"
+        name: "{{ item.name }}"
+        switch_name: "{{ item.switch }}"
+        mac_address: "{{ item.mac }}"
+        state: present
+      loop:
+        - { name: "NIC-QA", switch: "QA-Switch", mac: "00155D010204" }
+        - { name: "NIC-PROD", switch: "PROD-Switch", mac: "00155D010205" }

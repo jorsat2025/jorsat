@@ -1,0 +1,14 @@
+---
+- name: Manage Hyper-V Virtual Machines
+  hosts: hyperv
+  gather_facts: false
+
+
+  tasks:
+
+    - name: Create a Gen2 VM with 4GB RAM
+      microsoft.hyperv.hv_vm:
+        name: "{{ vm_name }}"
+        state: present
+        generation: 2
+        memory_startup_bytes: 4GB

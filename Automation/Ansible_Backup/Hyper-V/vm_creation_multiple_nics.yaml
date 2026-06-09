@@ -1,0 +1,85 @@
+---
+- name: Manage Hyper-V Virtual Machines
+  hosts: hyperv
+  gather_facts: false
+
+  vars:
+    vm_name: "base-image-ubuntu2404"
+
+  tasks:
+
+    - name: Create a new VM
+      microsoft.hyperv.hv_vm:
+        name: "{{ vm_name }}"
+        generation: 2
+        memory_startup_bytes: 4294967296
+        state: present
+
+    - name: Configure VM processor
+      microsoft.hyperv.hv_processor:
+        vm_name: "{{ vm_name }}"
+        count: 1
+       
+    - name: Create a 20GB Dynamic VHDX file
+      microsoft.hyperv.hv_vhd:
+        path: "C:\\ProgramData\\Microsoft\\Windows\\Hyper-V\\VHDXs\\{{ vm_name }}.vhdx"
+        state: present
+        size_bytes: 21474836480
+        vhd_type: Dynamic
+
+    - name: Attach a data disk to a VM's SCSI controller
+      microsoft.hyperv.hv_hard_disk:
+        vm_name: "{{ vm_name }}"
+        path: "C:\\ProgramData\\Microsoft\\Windows\\Hyper-V\\VHDXs\\{{ vm_name }}.vhdx"
+        controller_type: SCSI
+        state: present
+
+    - name: Mount an installation ISO to an existing drive (or create it)
+      microsoft.hyperv.hv_dvd_drive:
+        vm_name: "{{ vm_name }}"
+        controller_number: 0
+        controller_location: 1
+        path: "\\\\172.25.240.1\\ISOs\\ubuntu-24.04.4-live-server-amd64.iso"
+        state: mounted
+
+    - name: Configure Secure Boot and Boot Order for a Gen2 VM
+      microsoft.hyperv.hv_vm_boot:
+        name: "{{ vm_name }}"
+        secure_boot: false
+        boot_order:
+          - DVD
+          - SCSI
+          - Network
+
+    - name: Phase 1 - Create ALL interfaces (DEV, QA, PROD)
+      microsoft.hyperv.hv_network_adapter:
+        vm_name: "{{ vm_name }}"
+        name: "{{ item.name }}"
+        switch_name: "{{ item.switch }}"
+        state: present
+      loop:
+        - { name: "NIC-DEV", switch: "DEV-Switch" }
+        - { name: "NIC-QA", switch: "QA-Switch" }
+        - { name: "NIC-PROD", switch: "PROD-Switch" }
+
+    - name: Phase 2 - Assign static MAC addresses to all interfaces
+      microsoft.hyperv.hv_network_adapter:
+        vm_name: "{{ vm_name }}"
+        name: "{{ item.name }}"
+        mac_address: "{{ item.mac }}"
+        state: present
+      loop:
+        - { name: "NIC-DEV", mac: "00155D010203" }
+        - { name: "NIC-QA", mac: "00155D010204" }
+        - { name: "NIC-PROD", mac: "00155D010205" }
+
+    - name: Remove default Hyper-V adapter (English)
+      microsoft.hyperv.hv_network_adapter:
+        vm_name: "{{ vm_name }}"
+        name: "Network Adapter"
+        state: absent
+
+    - name: Start the VM
+      microsoft.hyperv.hv_vm_state:
+        name: "{{ vm_name }}"
+        state: running

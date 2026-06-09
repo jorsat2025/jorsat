@@ -1,0 +1,28 @@
+---
+- hosts: all
+
+  tasks:
+
+    ## SLES12 SPX
+    - import_tasks: suse-sles12-so-proxy.yml
+      tags: proxy
+    - import_tasks: suse-sles12-so-register.yml
+      tags: register
+    - import_tasks: suse-sles12-so-updates.yml
+      tags: updates
+    - import_tasks: suse-sles12-ansible-install.yml
+      tags: ansible
+    - import_tasks: suse-sles12-docker-install.yml
+      tags: docker
+    - import_tasks: suse-sles12-mysql-install.yml
+      tags: [ mysql, mysql-install ]
+    - import_tasks: suse-sles12-mysql-config.yml
+      tags: [ mysql, mysql-config ]
+
+## SLES15 SPX
+- import_playbook: suse-sles15-docker-install.yml
+  tags: sles15-docker
+- import_playbook: suse-sles15-so-register.yml
+  tags: sles15-register
+- import_playbook: suse-sles15-so-upgrade.yml
+  tags: sles15-upgrade

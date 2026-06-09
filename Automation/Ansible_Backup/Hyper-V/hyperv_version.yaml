@@ -1,0 +1,13 @@
+- name: Retrieve Hyper-V host version
+  hosts: hyperv_hosts
+  gather_facts: no
+  tasks:
+    - name: Query Hyper-V supported host version
+      win_powershell: |
+        Import-Module Hyper-V
+        Get-VMHostSupportedVersion | Select-Object Version, MinimumVersion | ConvertTo-Json -Compress
+      register: hyperv_version
+
+    - name: Show Hyper-V version
+      debug:
+        msg: "Hyper-V supported versions: {{ hyperv_version.stdout }}"

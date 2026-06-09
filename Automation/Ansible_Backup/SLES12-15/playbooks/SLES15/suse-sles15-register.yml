@@ -1,0 +1,41 @@
+##### SLES15 SP5 register 
+#####
+
+---
+
+- name: SLES15 Registration
+  hosts: all
+
+  tasks:
+
+    - name: Delete actual repos
+      shell: zypper repos | grep No | cut -f3 -d '|' | sed -e "s/ //" | awk '{print "zypper rr " $1}' | bash
+
+    - name: Remove the update service
+      shell: zypper ls| grep Yes | cut -f3 -d '|' | sed -e "s/ //" | awk '{print "zypper removeservice " $1}' | bash
+
+    - name: Deleting Zypper credentials
+      command: rm -f "{{ item }}"
+      with_items:
+        - /etc/SUSEConnect
+        - /etc/zypp/services.d/*
+        - /etc/zypp/credentials.d/*
+
+    - name: SLES15 SP2 Register
+      command: SUSEConnect -r DE17B708784B38 -p SLES/15.2/x86_64
+
+    - name: SUSEConnect adding SLE Modules
+      command: "{{ item }}"
+      with_items:
+        - SUSEConnect -p sle-module-basesystem/15.2/x86_64
+        - SUSEConnect -p sle-module-containers/15.2/x86_64
+        - SUSEConnect -p sle-module-server-applications/15.2/x86_64
+        - SUSEConnect -p sle-module-server-applications/15.2/x86_64
+        - SUSEConnect -p PackageHub/15.2/x86_64
+
+#  post_task:
+    
+    - name: Refresh all repos
+      zypper_repository:
+        repo: '*'
+        runrefresh: yes

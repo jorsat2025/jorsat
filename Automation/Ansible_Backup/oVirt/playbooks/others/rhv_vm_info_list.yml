@@ -1,0 +1,40 @@
+- name: List of Templates
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  ## Vars Files (default configuration for host connection)
+  vars_files:
+   - ../../vars/rhv_vars.yml
+   - ../../vars/password.yml
+
+  ## Vars Enviroment hypervisor host
+  vars:
+   datacenter: GSV-Enterprise
+   cluster: GSV-Cluster
+#   vm_memory: "{{ vms_memory }}GiB"
+#   vm_name: "{{ vm_names }}.gsv.locals"
+
+  ## Pre task hypervisor login
+  pre_tasks:
+    - name: Login to oVirt
+      tags: always
+      ovirt_auth:
+        hostname: "{{ rhvm_fqdn }}"
+        username: "{{ rhvm_user }}"
+        password: "{{ rhvm_password }}"
+        ca_file: "{{ rhvm_cafile | default(omit) }}"
+        insecure: "{{ rhvm_insecure | default(true) }}"
+
+  ## Ovirt Query 
+
+    - name: Gather info on all the virtual machines
+      ovirt_vm_info:
+        auth: "{{ ovirt_auth }}"
+        pattern: '"name=*" AND cluster={{ cluster }}"'  # Get VMs from cluster "Default"
+        case_sensitive: no
+      register: vms
+
+    - name: Print the gathered info
+      debug:
+        var: vms.ovirt_vms[0]

@@ -1,0 +1,12 @@
+---
+- hosts: hyperv
+  gather_facts: false
+  tasks:
+    - name: VMs list
+      win_shell: |
+        (Get-VM *).name
+      register: vm_lists
+
+    - name: Show list
+      debug:
+        var: vm_lists.stdout_lines

@@ -1,0 +1,34 @@
+### SLES15 SP2 Upgrade
+### Playbook propousal: "If you have a SLES12 SPx and you want to make a release upgrade to SLES15 SP2, this is your playbook !"
+###
+###
+
+
+---
+
+- name: SLES12 SPx to SLES15 PS2
+  hosts: localhost
+
+  tasks:
+
+   - name: Ugrade forced
+     shell: zypper dup --force-resolution -y 
+
+   - name: Update all packages on OpenSUSE/SUSE Linux
+     zypper:
+       name: '*'
+       state: latest
+
+   - name: Check if a reboot is needed on all SUSE/OpenSUSE based servers
+     register: linux_reboot_required_file
+     stat: path=/boot/do_purge_kernels get_md5=no
+
+   - name: Reboot the SUSE/OpenSUSE box if kernel updated
+     reboot:
+       msg: "Reboot initiated by Ansible for kernel updates"
+       connect_timeout: 5
+       reboot_timeout: 300
+       pre_reboot_delay: 0
+       post_reboot_delay: 30
+       test_command: uptime
+     when: linux_reboot_required_file.stat.exists

@@ -1,0 +1,47 @@
+---
+- name: Create Inventory File from a Query
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  ## Vars Files (default configuration for host connection)
+  vars_files:
+   - ../../vars/rhv_vars.yml
+   - ../../vars/password.yml
+
+  vars:
+    iso: []
+
+
+
+  ## Pre task hypervisor login
+  pre_tasks:
+    - name: Login to oVirt
+      tags: always
+      ovirt_auth:
+        hostname: "{{ rhvm_fqdn }}"
+        username: "{{ rhvm_user }}"
+        password: "{{ rhvm_password }}"
+        ca_file: "{{ rhvm_cafile | default(omit) }}"
+        insecure: "{{ rhvm_insecure | default(true) }}"
+
+  tasks:
+
+    - name: Get all Storage domain Info
+      ovirt.ovirt.ovirt_storage_domain_info:
+        auth: "{{ ovirt_auth }}"
+        nested_attributes:
+          - name
+      register: result
+
+    - ansible.builtin.debug:
+       msg: "{{ result.ovirt_storage_domain }}"
+
+    #- name: "Build list of ISOs"
+    #  set_fact:
+    #    iso: "{{ iso }} + ['{{ item.name }}'] "
+    #  with_items:
+    #    "{{ sd_result.ovirt_storage_domains }}"
+
+    #- debug:
+    #    msg: "ISOs list: {{ iso | map(attribute='name' }}"

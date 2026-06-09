@@ -1,0 +1,60 @@
+---
+- name: Create Disk  on RHV
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars_prompt:
+    - name: vm_disk_name
+      prompt: What is your VM disk name?
+      private: no
+    - name: vm_disk_size
+      prompt: What is your disk size on GiB?
+      private: no
+    - name: vm_disk_storagedomain
+      prompt:  |
+        Choice your Storage Domain ?
+        shaka1_1
+        hosted_storage
+      default: shaka1_1
+      private: no
+
+  vars_files:
+   - ../vars/rhv_vars.yml
+   - ../vars/password.yml
+
+  vars:
+   datacenter: GSV-Enterprise
+   cluster: GSV-Cluster
+
+  pre_tasks:
+
+    - name: Login to oVirt
+      tags: always
+      ovirt_auth:
+        hostname: "{{ rhvm_fqdn }}"
+        username: "{{ rhvm_user }}"
+        password: "{{ rhvm_password }}"
+        ca_file: "{{ rhvm_cafile | default(omit) }}"
+        insecure: "{{ rhvm_insecure | default(true) }}"
+
+  tasks:
+
+    - debug: msg="{{ vm_disk_storagedomain }}"
+
+    # Create new disk for a VM
+    - ovirt.ovirt.ovirt_disk:
+        auth: "{{ ovirt_auth }}"
+        name: "{{ vm_disk_name }}"
+        size: "{{ vm_disk_size }}GiB"
+        format: cow
+        interface: virtio
+        storage_domain: "{{ vm_disk_storagedomain }}"
+
+  post_tasks:
+
+  - name: Logout from oVirt
+    tags: always
+    ovirt_auth:
+     state: absent
+     ovirt_auth: "{{ ovirt_auth }}"
