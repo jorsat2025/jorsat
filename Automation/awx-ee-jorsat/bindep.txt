@@ -1,0 +1,10 @@
+git
+curl
+jq
+yq
+
+sshpass
+
+postgresql-client
+
+rsync
