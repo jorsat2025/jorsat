@@ -3,3 +3,8 @@ collections:
   - name: ansible.windows
   - name: community.windows
   - name: microsoft.hyperv
+  - name: kubernetes.core
+  - name: redhat.openshift
+  - name: community.general
+  - name: community.docker
+  - name: ansible.utils
