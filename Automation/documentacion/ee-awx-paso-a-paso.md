@@ -61,6 +61,40 @@ requirements.txt
 bindep.txt
 ```
 
+Editar el archivo  execution-environment.yaml con el siguinte contenido
+
+
+```
+
+---
+version: 3
+
+images:
+  base_image:
+    name: rockylinux:9
+
+dependencies:
+  ansible_core:
+    package_pip: ansible-core
+  ansible_runner:
+    package_pip: ansible-runner
+  galaxy: requirements.yml
+  system: bindep.txt
+
+options:
+  package_manager_path: /usr/bin/dnf
+
+additional_build_steps:
+  prepend_base:
+    - RUN dnf install -y epel-release
+    - RUN echo "exclude=curl" >> /etc/dnf/dnf.conf
+  prepend_builder:
+    - RUN dnf install -y epel-release
+    - RUN echo "exclude=curl" >> /etc/dnf/dnf.conf
+
+```
+
+
 ---
 
 # 2️⃣ Instalar Ansible Builder
