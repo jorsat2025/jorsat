@@ -22,14 +22,3 @@ Write-Host "¡Limpieza Jorsat finalizada con éxito!" -ForegroundColor Green' -F
 
 # 2. Ejecutar el script evadiendo restricciones de ejecución locales
 Set-ExecutionPolicy Bypass -Scope Process -Force; .\Limpiar-Temporales.ps1
-
-Detalles del Mantenimiento Realizado
-C:\Windows\Temp\*: Remueve archivos temporales generados por el sistema operativo y servicios de fondo.
-
-AppData\Local\Temp\*: Elimina la basura acumulada por navegadores, instaladores y aplicaciones del usuario logueado.
-
-C:\Windows\Prefetch\*: Limpia los archivos de precarga que Windows genera para agilizar el arranque de apps viejas (ayuda a resolver problemas de rendimiento).
-
-SoftwareDistribution\Download\*: Borra los archivos de instalación residuales que deja Windows Update después de actualizar el sistema.
-
-Papelera: Ejecuta un vaciado forzado silencioso al final de la secuencia.
