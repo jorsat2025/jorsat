@@ -3,9 +3,9 @@
   hosts: all
   gather_facts: false
   vars:
-    vm_name: "test-gold1"
-    ruta_vms: "E:\SD-VMS\\Hyper-V"
-    switch_virtual: "net-vms"
+    vm_name: 'test-gold10'
+    ruta_vms: E:\SD-VMS\\Hyper-V'
+    switch_virtual: net-vms
     # ⚠️ REVISÁ ACÁ: Poné la ruta física real donde tenés tu ISO de Ubuntu
     ruta_iso: "E:\yperV-Templates\ubuntu-24.04-live-server-amd64.iso"
 
