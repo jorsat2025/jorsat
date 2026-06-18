@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-apigee-cassandra-prod-worker05
+spec:
+  capacity:
+    storage: 500Gi
+  volumeMode: Block
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: thin-csi
+  local:
+    path: /dev/disk/by-id/scsi-36000c299c797be4f083c81d7f4569fb7
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - worker-05.oseinfrait01.claro.amx
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-apigee-cassandra-prod-worker06
+spec:
+  capacity:
+    storage: 500Gi
+  volumeMode: Block
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: thin-csi
+  local:
+    path: /dev/disk/by-id/scsi-36000c2987a3f46a4c3f9d0532e3af4af
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - worker-06.oseinfrait01.claro.amx
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-apigee-cassandra-prod-worker07
+spec:
+  capacity:
+    storage: 500Gi
+  volumeMode: Block
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: thin-csi
+  local:
+    path: /dev/disk/by-id/scsi-36000c29552259b2b68f42813ae8cc3a9
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - worker-07.oseinfrait01.claro.amx
