@@ -26,6 +26,7 @@ Instalaremos el paquete nfs-common con el siguiente comando:
 ```bash
 sudo apt update
 sudo apt install nfs-common -y
+sudo apt install iptables-persistent
 ```
 Agregamos reglas a iptables para permitir trafico NFS:
 
