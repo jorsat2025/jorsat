@@ -29,7 +29,7 @@ Comenzaremos creando el  configuracion de storage persistente de plex. Vamos a n
  - Crear el PVC
 - Aplicar los archvos yaml correspondientes
 
-> Nos situamos en el namespace microservicios ya creado en las guias anteriores con el comando: kubectl config set-context --current --namespace=microservicios
+> Nos situamos en el namespace tv ya creado en las guias anteriores con el comando: kubectl config set-context --current --namespace=tv
 
 
 A continuacion creamos nuestro PVC ( Persistent Volume Claim) generando el archivo  pvc-plex.yaml:
