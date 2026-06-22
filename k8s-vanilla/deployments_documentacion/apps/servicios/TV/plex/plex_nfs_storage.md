@@ -39,7 +39,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: plex-pvc
-  namespace: microservicios
+  namespace: tv
 spec:
   accessModes:
     - ReadWriteMany
