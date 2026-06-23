@@ -1,0 +1,79 @@
+instanceID: "claro-apigee-hybrid-prod-inst"
+namespace: "claro-apigee-hybrid-prod"
+
+gcp:
+  projectID: "claup-apigee-hybrid-prod" # <-- Confirmado de tu captura
+  region: us-central1
+
+k8sCluster:
+  name: oseinfrait01.claro.amx
+  region: us-central1
+
+org: "claup-apigee-hybrid-prod"
+enhanceProxyLimits: true
+contractProvider: https://us-apigee.googleapis.com
+
+# Entorno productivo aislado
+envs:
+- name: prod
+  serviceAccountSecretRefs:
+    synchronizer: "apigee-synchronizer" # <-- Mapeado a tu Service Account dedicada
+    runtime: "apigee-runtime"           # <-- Mapeado a tu Service Account dedicada
+
+cassandra:
+  hostNetwork: false
+  replicaCount: 3
+  storage:
+    storageClass: thin-csi
+    storageSize: 500Gi # <-- Escalado a 500Gi para soportar el volumen de datos de producción
+  nodeSelector:
+    cloud.google.com/gke-nodepool: "apigee-data"
+
+ingressGateways:
+- name: apigee-ingress-manager
+  replicaCountMin: 2
+  replicaCountMax: 12 # <-- Mayor capacidad de escalado para picos de tráfico en Claro
+  nodeSelector:
+    cloud.google.com/gke-nodepool: "apigee-runtime"
+
+virtualhosts:
+- name: apigee-virtualhost
+  selector:
+    app: apigee-ingressgateway
+    ingress_name: apigee-ingress-manager
+  # Certificados definitivos de producción
+  sslCertPath: /opt/apigee-hybrid/APIGEE_HYBRID_BASE/APIGEE_HELM_CHARTS_HOME/apigee-virtualhost/certs/keystore_prod.pem
+  sslKeyPath: /opt/apigee-hybrid/APIGEE_HYBRID_BASE/APIGEE_HELM_CHARTS_HOME/apigee-virtualhost/certs/keystore_prod.key
+
+# Mapeo estricto e individual de componentes globales según tus Service Accounts de GCP
+guardrails:
+  serviceAccountRef: "apigee-non-prod" # Usualmente mapea a la cuenta general o runtime
+mart:
+  serviceAccountRef: "apigee-mart"
+connectAgent:
+  serviceAccountRef: "apigee-non-prod"
+logger:
+  enabled: true
+  serviceAccountRef: "apigee-logger"
+metrics:
+  serviceAccountRef: "apigee-metrics"
+watcher:
+  serviceAccountRef: "apigee-watcher"
+mintTaskScheduler:
+  serviceAccountRef: "apigee-non-prod"
+
+runtime:
+  image:
+    url: "gcr.io/apigee-release/hybrid/apigee-runtime"
+    tag: "1.16.0"
+  nodeSelector:
+    cloud.google.com/gke-nodepool: "apigee-runtime"
+  cwcAppend:
+    bin_setenv_max_mem: 8192Mi # <-- Subimos el tope de memoria de Java a 8GB para producción
+  resources:
+    requests:
+      cpu: 2
+      memory: 8Gi # <-- Recursos mínimos garantizados altos para que el tráfico no tenga delay
+    limits:
+      cpu: 4
+      memory: 12Gi

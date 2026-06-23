@@ -1,0 +1,78 @@
+instanceID: "claro-apigee-hybrid-desa-inst"
+namespace: "claro-apigee-hybrid-desa"
+
+gcp:
+  projectID: "claup-apigee-hybrid-desa"
+  region: us-central1
+
+k8sCluster:
+  name: oseinfrait01.claro.amx
+  region: us-central1
+
+org: "claup-apigee-hybrid-desa"
+enhanceProxyLimits: true
+contractProvider: https://us-apigee.googleapis.com
+
+- name: desa
+  serviceAccountSecretRefs:
+    synchronizer: "apigee-synchronizer"
+    runtime: "apigee-non-prod"
+- name: test
+  serviceAccountSecretRefs:
+    synchronizer: "apigee-synchronizer"
+    runtime: "apigee-non-prod"
+
+cassandra:
+  hostNetwork: false
+  replicaCount: 3
+  storage:
+    storageClass: thin-csi
+    storageSize: 250Gi
+  nodeSelector:
+    cloud.google.com/gke-nodepool: "apigee-data" # <-- Apunta a worker-05, 06 y 07
+
+ingressGateways:
+- name: apigee-ingress-manager
+  replicaCountMin: 2
+  replicaCountMax: 10
+  nodeSelector:
+    cloud.google.com/gke-nodepool: "apigee-runtime" # <-- Apunta a worker-08, 09 y 10
+
+virtualhosts:
+- name: apigee-virtualhost
+  selector:
+    app: apigee-ingressgateway
+    ingress_name: apigee-ingress-manager
+  sslCertPath: /opt/apigee-hybrid/APIGEE_HYBRID_BASE/APIGEE_HELM_CHARTS_HOME/apigee-virtualhost/certs/keystore_desa.pem
+  sslKeyPath: /opt/apigee-hybrid/APIGEE_HYBRID_BASE/APIGEE_HELM_CHARTS_HOME/apigee-virtualhost/certs/keystore_desa.key
+
+# Configuración de Service Accounts para componentes globales
+guardrails:
+  serviceAccountRef: "apigee-non-prod"
+mart:
+  serviceAccountRef: "apigee-non-prod"
+connectAgent:
+  serviceAccountRef: "apigee-non-prod"
+logger:
+  enabled: true
+  serviceAccountRef: "apigee-non-prod"
+metrics:
+  serviceAccountRef: "apigee-non-prod"
+watcher:
+  serviceAccountRef: "apigee-non-prod"
+mintTaskScheduler:
+  serviceAccountRef: "apigee-non-prod"
+
+runtime:
+  image:
+    url: "gcr.io/apigee-release/hybrid/apigee-runtime"
+    tag: "1.16.0"
+  nodeSelector:
+    cloud.google.com/gke-nodepool: "apigee-runtime" # <-- Apunta a worker-08, 09 y 10
+  cwcAppend:
+    bin_setenv_max_mem: 4096Mi
+  resources:
+    requests:
+      memory: 4Gi
+    limits:
+      memory: 6Gi
