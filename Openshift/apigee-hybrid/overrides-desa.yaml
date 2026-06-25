@@ -11,8 +11,9 @@ k8sCluster:
 
 org: "claup-apigee-hybrid-desa"
 enhanceProxyLimits: true
-contractProvider: https://us-apigee.googleapis.com
+#contractProvider: https://us-apigee.googleapis.com
 
+envs:
 - name: desa
   serviceAccountSecretRefs:
     synchronizer: "apigee-synchronizer"
@@ -29,24 +30,21 @@ cassandra:
     storageClass: thin-csi
     storageSize: 250Gi
   nodeSelector:
-    cloud.google.com/gke-nodepool: "apigee-data" # <-- Apunta a worker-05, 06 y 07
-
+    node-role.kubernetes.io/apigee-data:
 ingressGateways:
 - name: apigee-ingress-manager
   replicaCountMin: 2
   replicaCountMax: 10
-  nodeSelector:
-    cloud.google.com/gke-nodepool: "apigee-runtime" # <-- Apunta a worker-08, 09 y 10
 
 virtualhosts:
 - name: apigee-virtualhost
   selector:
     app: apigee-ingressgateway
     ingress_name: apigee-ingress-manager
-  sslCertPath: /opt/apigee-hybrid/APIGEE_HYBRID_BASE/APIGEE_HELM_CHARTS_HOME/apigee-virtualhost/certs/keystore_desa.pem
-  sslKeyPath: /opt/apigee-hybrid/APIGEE_HYBRID_BASE/APIGEE_HELM_CHARTS_HOME/apigee-virtualhost/certs/keystore_desa.key
+  sslCertPath: /opt/apigee-hybrid/APIGEE_HYBRID_BASE/APIGEE_HELM_CHARTS_HOME/apigee-virtualhost/certs/ claro-desa-group.key
+  sslKeyPath: /opt/apigee-hybrid/APIGEE_HYBRID_BASE/APIGEE_HELM_CHARTS_HOME/apigee-virtualhost/cert/ claro-desa-group.pem
 
-# Configuración de Service Accounts para componentes globales
+# Mapeo de componentes globales usando el nombre real en GCP (apigee-non-prod)
 guardrails:
   serviceAccountRef: "apigee-non-prod"
 mart:
@@ -67,8 +65,6 @@ runtime:
   image:
     url: "gcr.io/apigee-release/hybrid/apigee-runtime"
     tag: "1.16.0"
-  nodeSelector:
-    cloud.google.com/gke-nodepool: "apigee-runtime" # <-- Apunta a worker-08, 09 y 10
   cwcAppend:
     bin_setenv_max_mem: 4096Mi
   resources:
