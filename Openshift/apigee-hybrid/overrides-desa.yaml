@@ -13,15 +13,26 @@ org: "claup-apigee-hybrid-desa"
 enhanceProxyLimits: true
 #contractProvider: https://us-apigee.googleapis.com
 
+# Declaración de los dos entornos lógicos en el mismo archivo
 envs:
 - name: desa
+  synchronizerEnabled: true
   serviceAccountSecretRefs:
     synchronizer: "apigee-synchronizer"
     runtime: "apigee-non-prod"
+  runtime:
+    runtime:
+      jvm:
+        maxMemory: "4Gi"
 - name: test
+  synchronizerEnabled: true
   serviceAccountSecretRefs:
     synchronizer: "apigee-synchronizer"
     runtime: "apigee-non-prod"
+  runtime:
+    runtime:
+      jvm:
+        maxMemory: "4Gi"
 
 cassandra:
   hostNetwork: false
@@ -31,18 +42,27 @@ cassandra:
     storageSize: 250Gi
   nodeSelector:
     node-role.kubernetes.io/apigee-data:
+  schemaValidationEnabled: true
+  auth: 
+    ddl:
+      password: Tiloveapis123
+
 ingressGateways:
-- name: apigee-ingress-manager
+- name: apigee-ingress
   replicaCountMin: 2
   replicaCountMax: 10
 
 virtualhosts:
-- name: apigee-virtualhost
+- name: claro-desa-group
+  envgroup: claro-desa-group
+  hostnames:
+  - apigee-desa-test.claro.amx
   selector:
     app: apigee-ingressgateway
     ingress_name: apigee-ingress-manager
-  sslCertPath: /opt/apigee-hybrid/APIGEE_HYBRID_BASE/APIGEE_HELM_CHARTS_HOME/apigee-virtualhost/certs/ claro-desa-group.key
-  sslKeyPath: /opt/apigee-hybrid/APIGEE_HYBRID_BASE/APIGEE_HELM_CHARTS_HOME/apigee-virtualhost/cert/ claro-desa-group.pem
+  sslCertPath: certs/claro-desa-group.pem
+  sslKeyPath: certs/claro-desa-group.key  #sslCertPath: /opt/apigee-hybrid/APIGEE_HYBRID_BASE/APIGEE_HELM_CHARTS_HOME/apigee-virtualhost/certs/claro-desa-group.key
+  #sslKeyPath: /opt/apigee-hybrid/APIGEE_HYBRID_BASE/APIGEE_HELM_CHARTS_HOME/apigee-virtualhost/cert/claro-desa-group.pem
 
 # Mapeo de componentes globales usando el nombre real en GCP (apigee-non-prod)
 guardrails:
@@ -66,9 +86,9 @@ runtime:
     url: "gcr.io/apigee-release/hybrid/apigee-runtime"
     tag: "1.16.0"
   cwcAppend:
-    bin_setenv_max_mem: 4096Mi
+    bin_setenv_max_mem: 4096M
   resources:
     requests:
-      memory: 4Gi
+      memory: 4096M
     limits:
-      memory: 6Gi
+      memory: 6092M
